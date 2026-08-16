@@ -7,8 +7,8 @@ Your code is ready. Follow this exact guide to complete the deployment.
 ## ✅ What You Have
 
 **Database (Neon):**
-- Pooled URL: `postgresql://neondb_owner:npg_pSfbC61mEiqj@ep-wild-tooth-au54nb1j.c-10.us-east-1.aws.neon.tech/neondb?sslmode=require`
-- Direct URL: `postgresql://neondb_owner:npg_pSfbC61mEiqj@ep-wild-tooth-au54nb1j.c-10.us-east-1.aws.neon.tech/neondb?sslmode=require`
+- Pooled URL: `postgresql://neondb_owner:npg_KbtuUhcQ1d8M@ep-purple-wave-aucvptk5-pooler.c-10.us-east-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require`
+- Direct URL: Check your Neon dashboard for the direct (non-pooler) connection string
 
 **Admin Hash:** `$2b$12$TS7.K0RcpIfa0yFQ4CcS7ep0jzjXuvkhKg7BtxOZraorKhKQyjZxm`
 
@@ -28,12 +28,13 @@ Your code is ready. Follow this exact guide to complete the deployment.
 **Copy-paste each line exactly:**
 
 ```
-DATABASE_URL=postgresql://neondb_owner:npg_pSfbC61mEiqj@ep-wild-tooth-au54nb1j.c-10.us-east-1.aws.neon.tech/neondb?sslmode=require
+DATABASE_URL=postgresql://neondb_owner:npg_KbtuUhcQ1d8M@ep-purple-wave-aucvptk5-pooler.c-10.us-east-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require
 ```
 
 ```
-DIRECT_URL=postgresql://neondb_owner:npg_pSfbC61mEiqj@ep-wild-tooth-au54nb1j.c-10.us-east-1.aws.neon.tech/neondb?sslmode=require
+DIRECT_URL=postgresql://neondb_owner:npg_KbtuUhcQ1d8M@ep-purple-wave-aucvptk5-pooler.c-10.us-east-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require
 ```
+(⚠️ Check your Neon dashboard for the direct (non-pooler) URL for migrations)
 
 ```
 NEXT_PUBLIC_SOCKET_URL=http://localhost:3001
@@ -193,7 +194,7 @@ Then redeploy.
 
 ### Database Connection Fails
 - Verify Neon database is running
-- Test connection: `psql "postgresql://neondb_owner:npg_pSfbC61mEiqj@ep-wild-tooth-au54nb1j.c-10.us-east-1.aws.neon.tech/neondb?sslmode=require"`
+- Test connection: `psql "postgresql://neondb_owner:npg_KbtuUhcQ1d8M@ep-purple-wave-aucvptk5-pooler.c-10.us-east-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require"`
 - Verify connection strings have no typos
 
 ---
