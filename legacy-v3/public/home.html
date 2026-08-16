@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#7a0019">
+  <meta name="description" content="SintaChat is an independent anonymous text conversation platform for PUP students.">
+  <title>SintaChat | Home</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+  <link rel="stylesheet" href="/styles.css?v=36320">
+  <script src="/terms-gate.js?v=36320"></script>
+</head>
+<body class="marketing-page">
+
+  <div id="siteIntro" class="site-intro" aria-hidden="true">
+    <div class="site-intro-logo-wrap">
+      <span class="site-intro-ring"></span>
+      <img src="/assets/favicon.svg" alt="" class="site-intro-logo">
+    </div>
+  </div>
+
+  <div class="site-shell">
+    <header class="topbar">
+      <a class="brand brand-wordmark" href="/home">
+        <span class="logo-orb"><img src="/assets/favicon.svg" alt="" width="38" height="38"></span>
+        <span class="anonisko-word">SintaChat</span>
+      </a>
+      <nav class="main-nav" aria-label="Primary navigation">
+        <a class="active" href="/home">Home</a>
+        <a href="/about">About</a>
+        <a href="/terms">Terms</a>
+      </nav>
+      <button class="theme-toggle" type="button" aria-label="Toggle dark mode" data-theme-toggle>
+        <span class="theme-icon sun-icon"></span>
+        <span class="theme-icon moon-icon"></span>
+      </button>
+    </header>
+
+    
+
+<main class="home-v3-main">
+  <section class="home-v3-hero">
+    <div class="home-v3-logo-wrap" aria-hidden="true">
+      <img src="/assets/favicon.svg" alt="" class="home-v3-logo">
+    </div>
+
+    <p class="home-v3-eyebrow">ANONYMOUS STUDENT CONVERSATIONS</p>
+    <h1 class="home-v3-title">
+      <span class="anonisko-word gradient-wordmark home-v3-animated-wordmark">SintaChat</span>
+    </h1>
+    <p class="home-v3-tagline">Meet an Isko. Meet an Iska. Stay anonymous.</p>
+    <p class="home-v3-subtitle">
+      Match, chat, and break the ice with students from different schools.
+    </p>
+
+    
+    <form id="homeMatchForm" class="home-v4-match-form" autocomplete="off">
+      <label class="home-v4-field">
+        <span>Nickname</span>
+        <input id="nickname" name="nickname" type="text" maxlength="24" minlength="3"
+          autocomplete="off" placeholder="Choose a nickname" required>
+        <small>3 to 24 characters. Letters, numbers, spaces, underscore, dash, and period.</small>
+      </label>
+
+      <fieldset class="home-v4-fieldset">
+        <legend>Match with</legend>
+        <div class="home-v4-segmented">
+          <button type="button" data-preference="male" aria-pressed="false">Male</button>
+          <button type="button" data-preference="female" aria-pressed="false">Female</button>
+          <button type="button" data-preference="anyone" class="active" aria-pressed="true">Any</button>
+        </div>
+        <small id="matchPreferenceText">Finding an Iska or Isko.</small>
+      </fieldset>
+
+      <label id="campusStage" class="home-v4-field home-v4-stage is-hidden-stage">
+        <span>University / Campus</span>
+        <select id="campus" name="campus" required>
+          <option value="">Select your campus</option>
+        </select>
+      </label>
+
+      <fieldset id="vibeStage" class="home-v4-fieldset home-v4-stage is-hidden-stage">
+        <legend>Conversation vibe</legend>
+        <div id="vibeOptions" class="vibe-options home-v4-options" role="radiogroup"
+          aria-label="Conversation vibe"></div>
+        <small>What kind of conversation are you looking for right now?</small>
+      </fieldset>
+
+      <fieldset id="interestsStage" class="home-v4-fieldset home-v4-stage is-hidden-stage">
+        <legend>Interests <span class="field-optional">optional, up to 3</span></legend>
+        <div id="interestOptions" class="interest-options home-v4-options"
+          aria-label="Conversation interests"></div>
+        <small>Shared interests are prioritized when a compatible student is available.</small>
+      </fieldset>
+
+      <label id="aboutStage" class="home-v4-field home-v4-stage is-hidden-stage">
+        <span>About me <small>optional</small></span>
+        <textarea id="aboutMe" name="aboutMe" maxlength="120" rows="3"
+          placeholder="freshie, mahilig sa games, music, at random 2am conversations"></textarea>
+        <small><span id="aboutMeCount">0</span>/120</small>
+      </label>
+
+      <button id="findSomeoneButton" class="home-v4-find-button home-v4-stage is-hidden-stage" type="submit">
+        Find someone
+      </button>
+
+      <p id="formMessage" class="form-message home-v4-form-message" role="status"></p>
+    </form>
+
+
+    <section class="home-v3-chat-card">
+      <img class="home-v3-chat-icon home-v3-local-icon" src="/assets/home-chat.png" alt="" aria-hidden="true">
+      <div>
+        <strong>Main chat</strong>
+        <small>Talk to anyone, anywhere</small>
+      </div>
+    </section>
+
+    <section class="home-v3-feature-grid" aria-label="SintaChat features">
+      <article class="home-v3-feature">
+        <img class="home-v3-feature-icon-img" src="/assets/home-icebreaker.png" alt="" aria-hidden="true">
+        <strong>Icebreakers</strong>
+        <small>Conversation starters when you do not know what to say.</small>
+      </article>
+      <article class="home-v3-feature">
+        <img class="home-v3-feature-icon-img" src="/assets/home-game.png" alt="" aria-hidden="true">
+        <strong>Activities</strong>
+        <small>Games and prompts made for anonymous student conversations.</small>
+      </article>
+      <article class="home-v3-feature">
+        <img class="home-v3-feature-icon-img" src="/assets/home-shield.png" alt="" aria-hidden="true">
+        <strong>Stay anonymous</strong>
+        <small>Your chat identity stays separate from your real details.</small>
+      </article>
+    </section>
+  </section>
+</main>
+
+      <div id="endOverlay" class="end-overlay hidden" aria-live="polite">
+        <div class="end-animation-card">
+          <div class="end-logo-stage">
+            <div class="end-logo-ring"></div>
+            <img src="/assets/favicon.svg" alt="" class="end-logo">
+          </div>
+          <p class="kicker">Conversation ended</p>
+          <h2 id="endOverlayTitle">The conversation has ended.</h2>
+          <p id="endOverlayText">You can return to the match screen and meet someone new.</p>
+          <button id="endOverlayButton" class="primary-button" type="button">Find another conversation</button>
+        </div>
+      </div>
+
+      <dialog id="reportDialog">
+        <form id="reportForm" method="dialog" class="dialog-card">
+          <div class="dialog-heading">
+            <div>
+              <p class="kicker">Safety</p>
+              <h2>Report this conversation</h2>
+            </div>
+            <button id="closeReport" class="dialog-close" value="cancel" aria-label="Close report dialog" type="button">X</button>
+          </div>
+
+          <label class="field">
+            <span>Reason</span>
+            <select id="reportReason" required>
+              <option value="harassment">Harassment</option>
+              <option value="sexual_content">Sexual content</option>
+              <option value="spam">Spam</option>
+              <option value="hate">Hate or discrimination</option>
+              <option value="personal_info">Sharing personal information</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Additional details</span>
+            <textarea id="reportDetails" maxlength="500" rows="4" placeholder="Optional"></textarea>
+          </label>
+
+          <div class="dialog-actions">
+            <button id="cancelReport" class="secondary-button" type="button">Cancel</button>
+            <button class="primary-button" type="submit">Submit report</button>
+          </div>
+        </form>
+      </dialog>
+
+    
+  </div>
+  <script src="/theme.js?v=36320"></script>
+  <script src="/socket.io/socket.io.js?v=36320"></script>
+  <script src="/home-profile.js?v=36320"></script>
+  <script src="/home.js?v=36320"></script>
+
+
+
+
+<footer class="home-v3-footer">
+  <p>
+    If you found bugs, errors, or want to suggest something,
+    <a href="mailto:official.sintachat@gmail.com">send us an email: official.sintachat@gmail.com</a>
+  </p>
+  <p>© 2026 SintaChat. All rights reserved.</p>
+</footer>
+
+
+</body>
+</html>

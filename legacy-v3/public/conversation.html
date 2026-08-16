@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#7a0019">
+  <meta name="description" content="SintaChat anonymous conversation.">
+  <title>SintaChat | Conversation</title>
+  <link id="siteFavicon" rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+  <link rel="stylesheet" href="/styles.css?v=36320">
+  <script src="/terms-gate.js?v=36320"></script>
+</head>
+<body class="conversation-page">
+  <div class="conversation-shell">
+    <header class="conversation-site-header conversation-top-header">
+      <a class="brand brand-wordmark" href="/">
+        <span class="logo-orb"><img src="/assets/favicon.svg" alt="" width="38" height="38"></span>
+        <span class="anonisko-word">SintaChat</span>
+      </a>
+      <div class="conversation-header-actions">
+        <button class="theme-toggle" type="button" aria-label="Toggle dark mode" data-theme-toggle>
+          <span class="theme-icon sun-icon"></span><span class="theme-icon moon-icon"></span>
+        </button>
+      </div>
+    </header>
+
+    <main class="conversation-main">
+      <section id="reconnectView" class="conversation-state-card">
+        <div class="match-animation-scene compact">
+          <div class="match-orbit">
+            <div class="match-person match-person-left"><span class="match-head"></span><span class="match-body"></span></div>
+            <div class="match-center-logo"><img src="/assets/favicon.svg" alt=""></div>
+            <div class="match-person match-person-right"><span class="match-head"></span><span class="match-body"></span></div>
+          </div>
+          <p class="kicker">connecting</p>
+          <h1>Opening your conversation...</h1>
+          <p>Restoring the anonymous session.</p>
+          <div class="conversation-skeleton" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      </section>
+
+      <section id="findingView" class="conversation-state-card hidden">
+        <div class="match-animation-scene">
+          <div class="match-orbit">
+            <div class="match-person match-person-left"><span class="match-head"></span><span class="match-body"></span></div>
+            <div class="match-center-logo"><img src="/assets/favicon.svg" alt=""></div>
+            <div class="match-person match-person-right"><span class="match-head"></span><span class="match-body"></span></div>
+          </div>
+          <p class="kicker">Matchmaking</p>
+          <h1 id="findingTitle">Finding someone...</h1>
+          <p>Searching for another compatible student.</p>
+          <div class="match-progress"><span></span></div>
+          <button id="cancelFindButton" class="secondary-button" type="button">Cancel</button>
+        </div>
+      </section>
+
+      <section id="connectedAnimationView" class="conversation-state-card connected-state hidden">
+        <div class="match-animation-scene connected">
+          <div class="match-orbit">
+            <div class="match-person match-person-left"><span class="match-head"></span><span class="match-body"></span></div>
+            <div class="match-center-logo"><img src="/assets/favicon.svg" alt=""></div>
+            <div class="match-person match-person-right"><span class="match-head"></span><span class="match-body"></span></div>
+          </div>
+          <p class="kicker">Connected</p>
+          <h1 id="connectedAnimationTitle">Connected.</h1>
+          <p>Starting your conversation...</p>
+        </div>
+      </section>
+
+      <section id="chatView" class="animo-chat conversation-chat hidden">
+        <header class="animo-chat-topbar stable-partner-header">
+          <div class="animo-avatar stable-partner-avatar" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="25" height="25" fill="none">
+              <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8c.8-4 3.2-6 7-6s6.2 2 7 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>
+          </div>
+
+          <div class="stable-partner-copy">
+            <span class="stable-partner-label">Chatting with</span>
+            <div class="animo-name-row stable-name-row">
+              <h2 id="partnerNickname">Anonymous</h2>
+              <span class="status-dot"></span>
+            </div>
+            <p id="partnerDetails" class="partner-details stable-partner-details"></p>
+            <div id="partnerContext" class="partner-context stable-partner-context"></div>
+            <div class="conversation-partner-meta">
+              <span id="conversationVibeIndicator" class="conversation-vibe-indicator hidden"></span>
+              <span id="partnerAboutMe" class="partner-about-me hidden"></span>
+            </div>
+          </div>
+
+          <div class="animo-session-tools stable-session-tools">
+            <div class="conversation-clock discord-clock" title="Conversation duration">
+              <span class="duration-speaker" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none">
+                  <path d="M4 10v4h4l5 4V6L8 10H4Z" fill="currentColor"/>
+                  <path d="M16 9c1.2 1.5 1.2 4.5 0 6M18.5 6.5c3.2 3 3.2 8 0 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                </svg>
+              </span>
+              <strong id="conversationClock">00:00:00</strong>
+            </div>
+            <button id="endButtonHeader" class="header-end-button" type="button">End</button>
+            <button id="moreActionsButton" class="header-more-button" type="button" aria-label="More conversation actions" aria-haspopup="dialog">
+              <span></span><span></span><span></span>
+            </button>
+          </div>
+        </header>
+        <div id="offlineBanner" class="offline-banner hidden" role="status">
+          <span></span>You are offline. The conversation stays open.
+        </div>
+
+        <div class="animo-announcement mobile-chat-tools">
+          <div class="announcement-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+              <path d="M5 6.5h14v8H9l-4 3v-11Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="announcement-copy">
+            <strong>Main chat</strong>
+            <span>anonymous one-on-one conversation</span>
+          </div>
+          
+        </div>
+
+        
+        <div id="conversationTimedNotice" class="conversation-timed-notice hidden"></div>
+<div id="messages" class="animo-messages messages" aria-live="polite">
+          <div class="anonisko-chat-watermark" aria-hidden="true">
+            <span>SintaChat.com</span>
+          </div>
+          <div id="emptyConversationState" class="empty-conversation-state">
+            <span class="conversation-line-mark" aria-hidden="true"></span>
+            <p>you found each other. say something, or start with a question.</p>
+            <button id="emptyIcebreakerButton" type="button">give me a question</button>
+          </div>
+        </div>
+        <button id="newMessagesButton" class="new-messages-button hidden" type="button">
+          <span id="newMessagesCount">1 new message</span>
+          <span aria-hidden="true">↓</span>
+        </button>
+
+        <div class="animo-status-row">
+          <p id="typingStatus" class="typing-status"></p>
+          <span class="mobile-clock discord-mobile-clock" id="mobileConversationClock">00:00:00</span>
+        </div>
+
+        <div id="voiceRecorder" class="voice-recorder hidden">
+          <div class="voice-recording-dot"></div>
+          <div class="voice-recorder-copy">
+            <strong>recording voice message</strong>
+            <div class="recording-live-row">
+              <div id="recordingWaveform" class="recording-waveform" aria-hidden="true"></div>
+              <span id="voiceTimer">00:00</span>
+            </div>
+          </div>
+          <button id="cancelVoiceButton" class="voice-cancel-button" type="button">Cancel</button>
+          <button id="sendVoiceButton" class="voice-send-button" type="button">Send</button>
+        </div>
+
+        <div id="replyPreview" class="reply-preview hidden">
+          <div>
+            <span class="reply-label">replying to</span>
+            <strong id="replyPreviewSender">message</strong>
+            <p id="replyPreviewText"></p>
+          </div>
+          <button id="cancelReplyButton" type="button" aria-label="Cancel reply">X</button>
+        </div>
+
+        
+        
+        
+        <div id="mobileQuickPrompts" class="mobile-quick-prompts conversation-quick-prompts" aria-label="Conversation starters">
+          <button id="mobileIcebreakerButton" type="button"
+            class="mobile-prompt-chip mobile-prompt-main"
+            aria-label="Generate another icebreaker">
+            <span class="mobile-icebreaker-icon" aria-hidden="true">🧊</span>
+            <span>Icebreaker</span>
+          </button>
+
+          <button id="mobilePromptSuggestion" type="button"
+            class="mobile-prompt-chip mobile-prompt-suggestion"
+            aria-label="Send this icebreaker">
+            What's your campus pet peeve?
+          </button>
+        </div>
+
+
+<form id="messageForm" class="animo-composer composer desktop-composer mobile-chat-composer responsive-chat-composer">
+          <button id="emojiButtonDesktop" class="composer-icon-button emoji-composer-button" type="button" aria-label="Open emoji picker">
+            <span class="composer-emoji-mask" aria-hidden="true"></span>
+</button>
+          <button id="voiceButtonDesktop" class="composer-icon-button desktop-only-action" type="button" title="Record voice message" aria-label="Record voice message">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none">
+              <rect x="8" y="3" width="8" height="12" rx="4" stroke="currentColor" stroke-width="1.7"/>
+              <path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <button id="activitiesButton" class="composer-icon-button composer-activities-button" type="button" aria-haspopup="dialog">
+            <span class="activities-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="19" height="19" fill="none">
+                <path d="M8 9h8l2 2v5a2 2 0 0 1-2 2h-1.2l-1.8-2h-2l-1.8 2H8a2 2 0 0 1-2-2v-5l2-2Z"
+                  stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                <path d="M9 12v3M7.5 13.5h3M15.5 12.5h.01M17 14h.01"
+                  stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+              </svg>
+            </span>
+</button>
+          <div class="composer-input-wrap">
+            <textarea id="messageInput" rows="1" maxlength="1000" aria-label="Message" placeholder="Say hi!"></textarea>
+            <span id="characterCounter" class="character-counter hidden">0 / 1000</span>
+          </div>
+          <button class="send-button animo-send-button" type="submit">Send</button>
+        </form>
+
+        <section id="endedState" class="ended-inline hidden" aria-live="polite">
+    <div class="ended-inline-inner">
+      <div class="ended-status-line">
+        <span id="endedStatusText">You ended the chat.</span>
+        <button id="endedReportLink" class="inline-action-link" type="button">Report?</button>
+        <button id="endedBlockLink" class="inline-action-link danger-link" type="button">Block</button>
+      </div>
+          <section id="conversationFeedback" class="conversation-feedback hidden">
+            <strong>How was the conversation?</strong>
+            <div class="conversation-feedback-actions">
+              <button type="button" data-feedback="good">👍 Good</button>
+              <button type="button" data-feedback="okay">😐 Okay</button>
+              <button type="button" data-feedback="bad">👎 Bad</button>
+            </div>
+            <small id="conversationFeedbackThanks" class="hidden">Thanks for the feedback.</small>
+          </section>
+
+      <div class="ended-new-chat-card">
+        <div>
+          <p class="kicker">conversation ended</p>
+          <h2 id="endedHeading">Your conversation has ended.</h2>
+          <p>Start a new anonymous conversation whenever you're ready.</p>
+        </div>
+        <button id="nextConversationButton" class="primary-button new-chat-button" type="button">New chat</button>
+      </div>
+    </div>
+  </section>
+      </section>
+    </main>
+  </div>
+
+
+
+
+
+  <div id="emojiPicker" class="emoji-picker-panel hidden" role="dialog" aria-label="Emoji picker">
+    <div class="emoji-picker-head">
+      <div class="emoji-picker-title">
+        <span class="emoji-picker-hand" aria-hidden="true">👇</span>
+        <span>Pick an emoji...</span>
+      </div>
+      <button id="closeEmojiPicker" type="button" class="emoji-picker-close" aria-label="Close emoji picker">×</button>
+    </div>
+
+    <div id="emojiCategories" class="emoji-category-tabs" role="tablist" aria-label="Emoji categories"></div>
+
+    <div class="emoji-search-row">
+      <label class="emoji-search-box">
+        <span aria-hidden="true">⌕</span>
+        <input id="emojiSearchInput" type="search" placeholder="Search" autocomplete="off">
+      </label>
+    </div>
+
+    <div id="emojiPickerBody" class="emoji-picker-body">
+      <p id="emojiSectionTitle" class="emoji-section-title">Frequently used</p>
+      <div id="emojiGrid" class="emoji-grid"></div>
+    </div>
+  </div>
+
+
+  <dialog id="activitiesDialog" class="action-sheet-dialog activities-dialog">
+    <div class="action-sheet activities-sheet">
+      <div class="action-sheet-handle"></div>
+      <p class="action-sheet-title">start something</p>
+
+      <button class="activity-option" type="button" data-activity="icebreaker">
+        <span class="activity-option-icon">?</span>
+        <span><strong>Icebreaker</strong><small>Start with an easy conversation prompt.</small></span>
+      </button>
+
+      <button class="activity-option" type="button" data-activity="would_you_rather">
+        <span class="activity-option-icon">A/B</span>
+        <span><strong>Would you rather</strong><small>Pick between two choices.</small></span>
+      </button>
+
+      <button class="activity-option" type="button" data-activity="this_or_that">
+        <span class="activity-option-icon">↔</span>
+        <span><strong>This or that</strong><small>Fast choices to keep the chat moving.</small></span>
+      </button>
+
+      <button class="activity-option" type="button" data-activity="quick_question">
+        <span class="activity-option-icon">Q</span>
+        <span><strong>Quick question</strong><small>Get a random question for both of you.</small></span>
+      </button>
+
+      <button id="closeActivitiesDialog" type="button" class="action-sheet-cancel">Cancel</button>
+    </div>
+  </dialog>
+
+  <dialog id="moreActionsDialog" class="action-sheet-dialog">
+    <div class="action-sheet">
+      <div class="action-sheet-handle"></div>
+      <p class="action-sheet-title">conversation actions</p>
+      <button id="moreReportButton" type="button" class="action-sheet-option">Report</button>
+      <button id="moreBlockButton" type="button" class="action-sheet-option danger-option">Block</button>
+      <button id="closeMoreActions" type="button" class="action-sheet-cancel">Cancel</button>
+    </div>
+  </dialog>
+
+  <dialog id="messageActionDialog" class="action-sheet-dialog message-action-sheet-dialog">
+    <div class="message-action-popover">
+      <div id="mobileReactionStrip" class="mobile-reaction-strip" aria-label="React to message">
+        <button type="button" data-mobile-reaction="❤️" aria-label="Heart">❤️</button>
+        <button type="button" data-mobile-reaction="😆" aria-label="Laugh">😆</button>
+        <button type="button" data-mobile-reaction="😮" aria-label="Wow">😮</button>
+        <button type="button" data-mobile-reaction="😢" aria-label="Sad">😢</button>
+        <button type="button" data-mobile-reaction="😭" aria-label="Cry">😭</button>
+        <button type="button" data-mobile-reaction="😡" aria-label="Angry">😡</button>
+        <button type="button" data-mobile-reaction="👍" aria-label="Like">👍</button>
+      </div>
+
+      <div class="mobile-message-action-menu">
+        <button id="sheetReplyButton" type="button" class="mobile-message-action-row">
+          <span>Reply</span>
+          <span class="mobile-message-action-icon" aria-hidden="true">↩</span>
+        </button>
+        <button id="sheetCopyButton" type="button" class="mobile-message-action-row">
+          <span>Copy</span>
+          <span class="mobile-message-action-icon copy-icon" aria-hidden="true">▣</span>
+        </button>
+      </div>
+
+      <button id="closeMessageActions" type="button" class="mobile-message-action-cancel">Cancel</button>
+    </div>
+  </dialog>
+
+  <dialog id="endConfirmDialog" class="confirm-dialog">
+    <div class="confirm-card">
+      <p class="kicker">end conversation</p>
+      <h2>Do you want to end this conversation?</h2>
+      <p>The other person will be disconnected from this chat too.</p>
+      <div class="confirm-actions">
+        <button id="cancelEndConfirm" class="secondary-button" type="button">No</button>
+        <button id="confirmEndButton" class="primary-button" type="button">Yes, end chat</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="blockConfirmDialog" class="confirm-dialog">
+    <div class="confirm-card">
+      <p class="kicker">block user</p>
+      <h2 id="blockConfirmTitle">Block this person?</h2>
+      <p>You won't be matched with this anonymous session again.</p>
+      <div class="confirm-actions">
+        <button id="cancelBlockConfirm" class="secondary-button" type="button">Cancel</button>
+        <button id="confirmBlockButton" class="primary-button danger-button" type="button">Block</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="reportDialog">
+    <form id="reportForm" method="dialog" class="dialog-card">
+      <div class="dialog-heading">
+        <div>
+          <p class="kicker">Safety</p>
+          <h2>Report this conversation</h2>
+        </div>
+        <button id="closeReport" class="dialog-close" type="button" aria-label="Close">X</button>
+      </div>
+      <label class="field">
+        <span>Reason</span>
+        <select id="reportReason" required>
+          <option value="harassment">Harassment</option>
+          <option value="sexual_content">Sexual content</option>
+          <option value="spam">Spam</option>
+          <option value="hate">Hate or discrimination</option>
+          <option value="personal_info">Sharing personal information</option>
+          <option value="other">Other</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Additional details</span>
+        <textarea id="reportDetails" maxlength="500" rows="4" placeholder="Optional"></textarea>
+      </label>
+      <div class="dialog-actions">
+        <button id="cancelReport" class="secondary-button" type="button">Cancel</button>
+        <button class="primary-button" type="submit">Submit report</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="/theme.js?v=36320"></script>
+  <script src="/socket.io/socket.io.js?v=36320"></script>
+  <script src="/conversation.js?v=36320"></script>
+</body>
+</html>

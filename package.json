@@ -1,0 +1,22 @@
+{
+  "name": "sintachat-v4",
+  "version": "4.1.1",
+  "private": true,
+  "workspaces": [
+    "apps/web",
+    "apps/server"
+  ],
+  "scripts": {
+    "dev": "concurrently -n web,server \"npm run dev -w apps/web\" \"npm run dev -w apps/server\"",
+    "build": "npm run build -w apps/web && npm run build -w apps/server",
+    "start": "npm run dev",
+    "typecheck": "npm run typecheck -w apps/web && npm run typecheck -w apps/server",
+    "start:production": "concurrently -n web,server \"npm run start -w apps/web\" \"npm run start -w apps/server\"",
+    "production": "npm run build && npm run start:production",
+    "db:generate": "npm run db:generate -w apps/web",
+    "db:migrate": "npm run db:migrate -w apps/web"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

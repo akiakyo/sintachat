@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#7a0019">
+  <title>SintaChat | Finding</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+  <link rel="stylesheet" href="/styles.css?v=36320">
+  <script src="/terms-gate.js?v=36320"></script>
+</head>
+<body class="finding-page finding-entering">
+  <div id="findingIntroLayer" class="finding-intro-layer" aria-hidden="true">
+    <div class="finding-intro-content">
+      <div class="finding-intro-mark">
+        <img src="/assets/favicon.svg" alt="">
+      </div>
+      <p class="kicker">matchmaking</p>
+      <h2 id="findingIntroTitle">Finding someone...</h2>
+    </div>
+  </div>
+  <div class="finding-shell">
+    <header class="conversation-site-header">
+      <a class="brand brand-wordmark" href="/">
+        <span class="logo-orb"><img src="/assets/favicon.svg" alt="" width="38" height="38"></span>
+        <span class="anonisko-word">SintaChat</span>
+      </a>
+      <button class="theme-toggle" type="button" aria-label="Toggle dark mode" data-theme-toggle>
+        <span class="theme-icon sun-icon"></span><span class="theme-icon moon-icon"></span>
+      </button>
+    </header>
+    <main class="finding-main">
+      <section class="finding-card">
+        <div class="match-animation-scene">
+          <div class="match-orbit finding-orbit">
+            <div class="match-person match-person-left"><span class="match-head"></span><span class="match-body"></span></div>
+            <div class="match-center-logo finding-logo"><img src="/assets/favicon.svg" alt=""></div>
+            <div class="match-person match-person-right"><span class="match-head"></span><span class="match-body"></span></div>
+          </div>
+          <p class="kicker">matchmaking</p>
+          <h1 id="findingTitle"><span id="findingPreferenceHeading">Finding an Iska or Isko...</span></h1>
+          <p id="findingText" class="finding-changing-copy">checking who is around...</p>
+          <div class="finding-context">
+            <span id="findingVibe"></span>
+            <span id="findingInterests"></span>
+          </div>
+          <div class="conversation-search-line" aria-hidden="true"><span></span><i></i><span></span></div>
+          <div id="matchReveal" class="match-reveal hidden">
+            <strong id="matchRevealName"></strong>
+            <span id="matchRevealMeta"></span>
+          </div>
+          <button id="cancelFindButton" class="secondary-button finding-cancel" type="button">Cancel search</button>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="/theme.js?v=36320"></script>
+  <script src="/socket.io/socket.io.js?v=36320"></script>
+  <script src="/finding.js?v=36320"></script>
+</body>
+</html>

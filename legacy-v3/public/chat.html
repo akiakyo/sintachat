@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#7a0019">
+  <meta name="description" content="SintaChat is an independent anonymous text conversation platform for PUP students.">
+  <title>SintaChat | Chat</title>
+
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+  <link rel="alternate icon" href="/assets/favicon.svg">
+  <link rel="stylesheet" href="/styles.css?v=36320">
+  <script src="/terms-gate.js?v=36320"></script>
+</head>
+<body>
+  <div class="site-shell">
+    <header class="topbar">
+      <a class="brand brand-wordmark" href="/" aria-label="SintaChat home">
+        <span class="logo-orb"><img src="/assets/favicon.svg" alt="" width="38" height="38"></span>
+        <span class="anonisko-word">SintaChat</span>
+      </a>
+      <nav class="main-nav chat-nav" aria-label="Primary navigation">
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+        <a href="/terms">Terms</a>
+      </nav>
+      <div class="topbar-actions">
+        <div class="presence" aria-label="Online users">
+          <span class="presence-dot"></span>
+          <span id="onlineCount">0 online</span>
+        </div>
+        <button class="theme-toggle" type="button" aria-label="Toggle dark mode" data-theme-toggle>
+          <span class="theme-icon sun-icon"></span><span class="theme-icon moon-icon"></span>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section id="setupView" class="hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">Anonymous PUP Conversations</p>
+          <h1>Meet an Isko.<br>Stay anonymous.</h1>
+          <p class="lead">
+            Create a nickname, choose your campus, and get matched with another PUP student for a private text conversation.
+          </p>
+
+          <div class="trust-row">
+            <div class="trust-item">
+              <span class="icon-box" aria-hidden="true">A</span>
+              <div>
+                <strong>Anonymous</strong>
+                <span>No real name or profile photo.</span>
+              </div>
+            </div>
+            <div class="trust-item">
+              <span class="icon-box" aria-hidden="true">T</span>
+              <div>
+                <strong>Text only</strong>
+                <span>No camera or microphone.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <section class="card setup-card" aria-labelledby="setupTitle">
+          <div class="card-heading">
+            <p class="kicker">Start a conversation</p>
+            <h2 id="setupTitle">Create your anonymous profile</h2>
+          </div>
+
+          <form id="profileForm" autocomplete="off">
+            <label class="field">
+              <span>Nickname</span>
+              <input
+                id="nickname"
+                name="nickname"
+                maxlength="24"
+                minlength="3"
+                placeholder="e.g. MidnightIsko"
+                required
+              >
+              <small>3 to 24 characters. Letters, numbers, spaces, underscore, dash, and period.</small>
+            </label>
+
+            <fieldset class="field">
+              <legend>Gender</legend>
+              <div class="segmented">
+                <label>
+                  <input type="radio" name="gender" value="male" required>
+                  <span>Male</span>
+                </label>
+                <label>
+                  <input type="radio" name="gender" value="female" required>
+                  <span>Female</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <label class="field">
+              <span>Campus</span>
+              <select id="campus" name="campus" required>
+                <option value="">Select your PUP campus</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>I want to talk to</span>
+              <select id="preference" name="preference" required>
+                <option value="anyone">Anyone</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </label>
+
+            <button class="primary-button" type="submit">Find someone</button>
+            <p id="formMessage" class="form-message" role="status"></p>
+          </form>
+        </section>
+      </section>
+
+      <section id="waitingView" class="center-view hidden" aria-live="polite">
+        <div class="card status-card">
+          <div class="search-mark" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+          <p class="kicker">Matchmaking</p>
+          <h2>Looking for someone...</h2>
+          <p id="waitingText">Searching for a compatible PUP student.</p>
+          <button id="cancelSearchButton" class="secondary-button" type="button">Cancel search</button>
+        </div>
+      </section>
+
+      <section id="chatView" class="chat-layout hidden">
+        <aside class="chat-sidebar card">
+          <div>
+            <p class="kicker">You are chatting with</p>
+            <h2 id="partnerNickname">Anonymous</h2>
+            <p id="partnerDetails" class="partner-details"></p>
+          </div>
+
+          <div class="chat-controls">
+            <button id="nextButton" class="primary-button" type="button">Next conversation</button>
+            <button id="reportButton" class="secondary-button" type="button">Report</button>
+            <button id="blockButton" class="secondary-button danger-outline" type="button">Block</button>
+            <button id="endButton" class="text-button" type="button">End chat</button>
+          </div>
+        </aside>
+
+        <section class="chat-panel card">
+          <header class="chat-header">
+            <div>
+              <span class="status-pill">Connected</span>
+              <p id="typingStatus" class="typing-status"></p>
+            </div>
+            <span id="waitingCount" class="small-stat">0 waiting</span>
+          </header>
+
+          <div id="messages" class="messages" aria-live="polite"></div>
+
+          <form id="messageForm" class="composer">
+            <textarea
+              id="messageInput"
+              rows="1"
+              maxlength="1000"
+              placeholder="Type a message..."
+              aria-label="Message"
+            ></textarea>
+            <button class="send-button" type="submit">Send</button>
+          </form>
+        </section>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>SintaChat is an independent student project and is not officially affiliated with the Polytechnic University of the Philippines.</p>
+      <p>Stay respectful. Do not share sensitive personal information.</p>
+    </footer>
+  </div>
+
+
+  <div id="endOverlay" class="end-overlay hidden" aria-live="polite">
+    <div class="end-animation-card">
+      <div class="end-logo-stage">
+        <div class="end-logo-ring"></div>
+        <img src="/assets/favicon.svg" alt="" class="end-logo">
+      </div>
+      <p class="kicker">Conversation ended</p>
+      <h2 id="endOverlayTitle">The conversation has ended.</h2>
+      <p id="endOverlayText">You can return to the match screen and meet someone new.</p>
+      <button id="endOverlayButton" class="primary-button" type="button">Find another conversation</button>
+    </div>
+  </div>
+
+  <dialog id="reportDialog">
+    <form id="reportForm" method="dialog" class="dialog-card">
+      <div class="dialog-heading">
+        <div>
+          <p class="kicker">Safety</p>
+          <h2>Report this conversation</h2>
+        </div>
+        <button id="closeReport" class="dialog-close" value="cancel" aria-label="Close report dialog" type="button">X</button>
+      </div>
+
+      <label class="field">
+        <span>Reason</span>
+        <select id="reportReason" required>
+          <option value="harassment">Harassment</option>
+          <option value="sexual_content">Sexual content</option>
+          <option value="spam">Spam</option>
+          <option value="hate">Hate or discrimination</option>
+          <option value="personal_info">Sharing personal information</option>
+          <option value="other">Other</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Additional details</span>
+        <textarea id="reportDetails" maxlength="500" rows="4" placeholder="Optional"></textarea>
+      </label>
+
+      <div class="dialog-actions">
+        <button id="cancelReport" class="secondary-button" type="button">Cancel</button>
+        <button class="primary-button" type="submit">Submit report</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="/theme.js?v=36320"></script>
+  <script src="/socket.io/socket.io.js?v=36320"></script>
+  <script src="/app.js?v=36320"></script>
+</body>
+</html>
