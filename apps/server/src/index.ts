@@ -332,6 +332,9 @@ function validProfile(p:any,isAdmin=false):p is Profile{
 function peerOf(session:string){const mid=matchBySession.get(session);if(!mid)return null;const pair=sessionsByMatch.get(mid);if(!pair)return null;return pair[0]===session?pair[1]:pair[0]}
 function emitStats(){io.emit("stats",{online:sessionSockets.size,waiting:queue.length})}
 function removeQueue(s:string){let i;while((i=queue.indexOf(s))>=0)queue.splice(i,1)}
+function hasConnectedSession(sessionUuid:string){
+ return (io.sockets.adapter.rooms.get(`session:${sessionUuid}`)?.size||0)>0
+}
 function preferenceCompatible(a:Profile,b:Profile){
  const wants=(p:Profile,candidate:Profile)=>{
   if(p.preference==="anyone")return true;
@@ -360,7 +363,7 @@ function makePartner(p:Profile){
   isAdmin:!!p.isAdmin
  }
 }
-function match(session:string){const p=profiles.get(session);if(!p)return false;removeQueue(session);for(let i=0;i<queue.length;i++){const other=queue[i];if(other===session||matchBySession.has(other))continue;const op=profiles.get(other);if(!op||!preferenceCompatible(p,op))continue;queue.splice(i,1);const mid=crypto.randomUUID();matchBySession.set(session,mid);matchBySession.set(other,mid);sessionsByMatch.set(mid,[session,other]);io.to(`session:${session}`).emit("matched",{matchUuid:mid,partner:makePartner(op)});io.to(`session:${other}`).emit("matched",{matchUuid:mid,partner:makePartner(p)});emitStats();return true}queue.push(session);io.to(`session:${session}`).emit("queue-status",{waiting:true});emitStats();return false}
+function match(session:string){const p=profiles.get(session);if(!p)return false;removeQueue(session);for(let i=0;i<queue.length;i++){const other=queue[i];if(other===session||matchBySession.has(other))continue;if(!hasConnectedSession(other)){queue.splice(i--,1);continue}const op=profiles.get(other);if(!op||!preferenceCompatible(p,op))continue;queue.splice(i,1);const mid=crypto.randomUUID();matchBySession.set(session,mid);matchBySession.set(other,mid);sessionsByMatch.set(mid,[session,other]);io.to(`session:${session}`).emit("matched",{matchUuid:mid,partner:makePartner(op)});io.to(`session:${other}`).emit("matched",{matchUuid:mid,partner:makePartner(p)});emitStats();return true}queue.push(session);io.to(`session:${session}`).emit("queue-status",{waiting:true});emitStats();return false}
 function shuffle<T>(items:T[]){
  const copy=[...items];
  for(let i=copy.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[copy[i],copy[j]]=[copy[j],copy[i]]}
@@ -556,7 +559,14 @@ io.on("connection",socket=>{const sessionUuid=String(socket.handshake.auth.sessi
  });
  socket.on("end-chat",(done:(r:any)=>void=()=>{})=>{endMatch(sessionUuid,"ended");done({ok:true})});
  socket.on("next",(done:(r:any)=>void=()=>{})=>{endMatch(sessionUuid,"next");setTimeout(()=>match(sessionUuid),20);done({ok:true})});
- socket.on("disconnect",()=>{sessionSockets.delete(sessionUuid);states.delete(socket.id);removeQueue(sessionUuid);emitStats()});
+ socket.on("disconnect",()=>{
+  states.delete(socket.id);
+  if(!hasConnectedSession(sessionUuid)){
+   sessionSockets.delete(sessionUuid);
+   removeQueue(sessionUuid);
+  }
+  emitStats()
+ });
 });
 
 server.listen(PORT,()=>console.log(`SintaChat realtime server running on http://localhost:${PORT}`));
