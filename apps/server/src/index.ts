@@ -556,6 +556,14 @@ io.on("connection",socket=>{const sessionUuid=String(socket.handshake.auth.sessi
   if(peer)io.to(`session:${peer}`).emit("icebreaker-prompt",event);
   done({ok:true,prompts})
 });
+ socket.on("refresh-icebreaker",(payload:any,done:(r:any)=>void=()=>{})=>{
+  if(!matchBySession.has(sessionUuid))return done({ok:false,error:"No active conversation."});
+  const slot=Number(payload?.slot);
+  if(slot!==0&&slot!==1)return done({ok:false,error:"Invalid icebreaker slot."});
+  const prompt=icebreakers[Math.floor(Math.random()*icebreakers.length)];
+  socket.emit("icebreaker-prompt",{slot,prompt});
+  done({ok:true,slot,prompt})
+ });
  socket.on("conversation-feedback",(payload:any,done:(r:any)=>void=()=>{})=>{
   const rating=String(payload?.rating||"");
   if(!["good","okay","bad"].includes(rating))return done({ok:false});
