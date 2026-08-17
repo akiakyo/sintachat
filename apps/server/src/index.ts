@@ -543,14 +543,18 @@ io.on("connection",socket=>{const sessionUuid=String(socket.handshake.auth.sessi
  });
  socket.on("ack-message",(payload:any)=>{const peer=peerOf(sessionUuid);if(peer)io.to(`session:${peer}`).emit("delivery-update",{id:String(payload?.id||""),status:"delivered"})});
  socket.on("typing",(payload:any)=>{const peer=peerOf(sessionUuid);if(peer)io.to(`session:${peer}`).emit("partner-typing",{typing:!!payload?.typing})});
+ socket.on("presence",(payload:any)=>{
+  const peer=peerOf(sessionUuid);
+  if(peer)io.to(`session:${peer}`).emit("partner-presence",{active:payload?.active!==false});
+ });
  socket.on("request-icebreaker",(done:(r:any)=>void=()=>{})=>{
   if(!matchBySession.has(sessionUuid))return done({ok:false,error:"No active conversation."});
-  const prompt=icebreakers[Math.floor(Math.random()*icebreakers.length)];
-  const event={prompt};
+  const prompts=shuffle(icebreakers).slice(0,2);
+  const event={prompts};
   const peer=peerOf(sessionUuid);
   io.to(`session:${sessionUuid}`).emit("icebreaker-prompt",event);
   if(peer)io.to(`session:${peer}`).emit("icebreaker-prompt",event);
-  done({ok:true,prompt})
+  done({ok:true,prompts})
 });
  socket.on("conversation-feedback",(payload:any,done:(r:any)=>void=()=>{})=>{
   const rating=String(payload?.rating||"");
