@@ -67,6 +67,7 @@ function VoiceIcon(){return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x=
 function GameIcon(){return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.4 8h9.2c2 0 3.4 1.2 4 3.2l1 4.4c.5 2.2-1.9 3.8-3.5 2.3l-2.1-2H8l-2.1 2c-1.6 1.5-4-.1-3.5-2.3l1-4.4C4 9.2 5.4 8 7.4 8Z" fill="none" stroke="currentColor" strokeWidth="1.7"/><path d="M7.3 11.1v3.4M5.6 12.8H9M16.3 11.8h.01M18.2 14h.01" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"/></svg>}
 function EmojiIcon(){return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.8" fill="none" stroke="currentColor" strokeWidth="1.7"/><path d="M8.5 14.2c.8 1.5 2 2.2 3.5 2.2s2.7-.7 3.5-2.2" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><circle cx="9" cy="10" r="1" fill="currentColor"/><circle cx="15" cy="10" r="1" fill="currentColor"/></svg>}
 function ReplyArrow(){return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 7 5 12l5 5M6 12h7c3.5 0 5.5 1.6 6 5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+function SendIcon(){return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 4 16 8-16 8 3-8-3-8Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/><path d="M7 12h13" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>}
 
 function endedTone(){
   if(!soundsEnabled())return;
@@ -725,6 +726,8 @@ function fmt(value:number){return `${String(Math.floor(value/60)).padStart(2,"0"
                 onChange={event=>{setInput(event.target.value);getSocket().emit("typing",{typing:!!event.target.value})}}
                 placeholder="Say hi!"
               />
+
+              {input.trim()&&<button type="submit" className="composer-send-button" aria-label="Send message" title="Send message"><SendIcon/></button>}
 
               <button type="button" className="composer-icon voice-button" aria-label="Voice" onClick={startVoice}><VoiceIcon/></button>
 
