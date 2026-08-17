@@ -7,14 +7,11 @@ const API=()=>process.env.NEXT_PUBLIC_SOCKET_URL||"http://localhost:3001";
 
 type WallPost={postId:string;nickname:string;university:string;text:string;createdAt:number;likes:number;replyCount:number};
 type WallReply={replyId:string;postId:string;nickname:string;text:string;createdAt:number;likes:number};
-type SortMode="latest"|"popular"|"unanswered";
-
 export default function Wall(){
   const[posts,setPosts]=useState<WallPost[]>([]);
   const[text,setText]=useState("");
   const[msg,setMsg]=useState("");
   const[loading,setLoading]=useState(true);
-  const[sort,setSort]=useState<SortMode>("latest");
   const[query,setQuery]=useState("");
   const[composerOpen,setComposerOpen]=useState(false);
   const[threadPost,setThreadPost]=useState<WallPost|null>(null);
@@ -75,30 +72,20 @@ export default function Wall(){
   const visible=useMemo(()=>{
     const q=query.trim().toLowerCase();
     let next=posts.filter(post=>!q||`${post.nickname} ${post.university} ${post.text}`.toLowerCase().includes(q));
-    if(sort==="unanswered")next=next.filter(post=>(post.replyCount||0)===0);
-    if(sort==="popular"){
-      const weekAgo=Date.now()-7*24*60*60*1000;
-      next=next.filter(post=>post.createdAt>=weekAgo).sort((a,b)=>(b.likes+b.replyCount*2)-(a.likes+a.replyCount*2)||b.createdAt-a.createdAt)
-    }else next=[...next].sort((a,b)=>b.createdAt-a.createdAt);
+    next=[...next].sort((a,b)=>b.createdAt-a.createdAt);
     return next
-  },[posts,sort,query]);
+  },[posts,query]);
 
   const relative=(stamp:number)=>{const s=Math.max(1,Math.floor((Date.now()-stamp)/1000));if(s<60)return `${s}s`;if(s<3600)return `${Math.floor(s/60)}m`;if(s<86400)return `${Math.floor(s/3600)}h`;return new Date(stamp).toLocaleDateString(undefined,{month:"short",day:"numeric"})};
   const avatar=(name:string)=>(name||"Anonymous").trim().charAt(0).toUpperCase()||"A";
 
   return <><SiteHeader/><main className="wall-page-v8">
-    <header className="wall-top-v8"><h1>Freedom Wall</h1><button onClick={()=>setComposerOpen(true)}><span>➤</span> Post</button></header>
+    <header className="wall-top-v8"><div><small className="wall-kicker">CAMPUS PULSE</small><h1>Freedom Wall</h1></div><button onClick={()=>setComposerOpen(true)}><span>➤</span> Post</button></header>
 
     <section className="wall-intro-v8">
-      <h2>What&apos;s happening on the wall?</h2>
-      <p>Anonymous thoughts, replies, questions, campus stories, and real-time conversations.</p>
+      <h2>A living board for student voices.</h2>
+      <p>Drop a thought, find a familiar story, or leave someone a little kindness.</p>
       <label className="wall-search-v8"><span>⌕</span><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search names or posts"/></label>
-      <div className="wall-tabs-v8">
-        <button className={sort==="latest"?"active":""} onClick={()=>setSort("latest")}>◷ Latest</button>
-        <button className={sort==="popular"?"active":""} onClick={()=>setSort("popular")}>♨ Popular this week</button>
-        <button className={sort==="unanswered"?"active":""} onClick={()=>setSort("unanswered")}>⊕ Unanswered</button>
-      </div>
-      <small>{sort==="latest"?"Everything on the wall, newest first.":sort==="popular"?"The most active posts from the last 7 days.":"Posts still waiting for their first reply."}</small>
       <div className="wall-v9-livebar"><span><i/> Community wall <b>{posts.length}</b></span><button type="button" onClick={load} disabled={loading}>{loading?"Refreshing…":"Refresh feed"}</button></div>
     </section>
 
