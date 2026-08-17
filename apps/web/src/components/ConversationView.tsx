@@ -647,7 +647,7 @@ function fmt(value:number){return `${String(Math.floor(value/60)).padStart(2,"0"
                   onKeyDown={event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();toggleMessageActions(message)}}}
                   aria-label="Message actions"
                 >
-                  {message.replyTo&&<div className="reply-snippet" aria-label={`Replying to ${message.replyTo.nickname||"message"}`}><ReplyArrow/><div><b>Replying to {message.replyTo.nickname||"message"}</b><span>{message.replyTo.text}</span></div></div>}
+                  {message.replyTo&&<div className="reply-snippet" aria-label="Quoted message"><span>{message.replyTo.text}</span></div>}
                   {message.type==="voice"&&message.audioUrl
                     ? <VoicePlayer src={message.audioUrl} label={message.duration}/>
                     : <span>{message.text}</span>}
@@ -702,7 +702,7 @@ function fmt(value:number){return `${String(Math.floor(value/60)).padStart(2,"0"
         </div>}
 
         {reply&&<div className="reply-preview" role="status">
-          <ReplyArrow/><div><b>Replying to {reply.nickname||"message"}</b><span>{reply.text}</span></div>
+          <div><span>{reply.text}</span></div>
           <button onClick={()=>setReply(null)}>×</button>
         </div>}
 
