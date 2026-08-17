@@ -16,10 +16,8 @@ const TERMS=[
 ];
 
 export default function Terms(){
- return <><SiteHeader/><main className="content-page terms-page legal-page">
-   <p className="eyebrow">TERMS &amp; CONDITIONS</p>
-   <h1>SintaChat — Terms and Conditions</h1>
-   <p className="legal-lead">These rules apply to anonymous chat, the Freedom Wall, reports, activities, voice messages, moderation features, and other SintaChat services.</p>
+ return <><SiteHeader/><main className="editorial-page terms-page legal-page">
+   <header className="editorial-hero"><p className="eyebrow">TERMS &amp; CONDITIONS</p><h1>SintaChat <em>Terms and Conditions.</em></h1><p className="editorial-lead">These rules apply to anonymous chat, the Freedom Wall, reports, activities, voice messages, moderation features, and other SintaChat services.</p><span className="editorial-orbit" aria-hidden="true"/></header>
    <div className="terms-numbered">
      {TERMS.map((term,index)=><article key={term.title}>
        <span>{index+1}</span>
