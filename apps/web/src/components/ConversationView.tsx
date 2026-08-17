@@ -536,6 +536,7 @@ export default function ConversationView({onExit}:{onExit?:()=>void}){
     }
     setEnding(true);
     endingRef.current=true;
+    setIcebreakers([]);
     setEndConfirm(false);
     setMoreOpen(false);
     setTimeout(()=>{
@@ -694,7 +695,7 @@ function fmt(value:number){return `${String(Math.floor(value/60)).padStart(2,"0"
         <div ref={endRef}/>
       </div>
 
-      {!ended&&<>
+      {!ended&&!ending&&<>
         {icebreakers.length>0&&<div className="ice-row legacy-ice-row">
           <button className="ice-label" type="button" onClick={()=>refreshIcebreakers()} aria-label="Refresh both icebreakers">Icebreaker</button>
           <div className="ice-questions" aria-live="polite">{icebreakers.map((prompt,index)=><button className="ice-question" type="button" key={`${iceVersion}-${index}-${prompt}`} onClick={()=>sendIcebreaker(prompt,index)}>{prompt}</button>)}</div>
