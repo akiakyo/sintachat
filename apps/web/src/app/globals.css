@@ -911,6 +911,8 @@ html[data-theme="dark"]{
   background:var(--soft);
   transform:translateY(-1px);
 }
+.message-quick-actions{padding:4px;border:1px solid color-mix(in srgb,var(--line) 82%,transparent);border-radius:999px;background:color-mix(in srgb,var(--paper) 94%,transparent);box-shadow:0 8px 22px rgba(35,7,18,.14);backdrop-filter:blur(10px)}
+.message-quick-actions>button,.message-reaction-wrap>button{width:30px;height:30px;border-color:transparent;box-shadow:none}.message-quick-actions>button:hover,.message-reaction-wrap>button:hover,.message-reaction-wrap>button.active{background:var(--soft);border-color:color-mix(in srgb,var(--brand) 22%,transparent)}
 .message-quick-actions svg{width:16px;height:16px;display:block}
 .message-reaction-wrap{position:relative;display:grid;place-items:center}
 .message-reaction-picker{

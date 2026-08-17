@@ -208,7 +208,7 @@ export default function ConversationView({onExit}:{onExit?:()=>void}){
     const sent=(event:any)=>{setMessages(list=>[...list,{...event,mine:true}]);messengerTone("send")};
     const voiceRecv=(event:any)=>{setMessages(list=>[...list,{...event,mine:false,type:"voice"}]);messengerTone("receive")};
     const voiceSent=(event:any)=>{setMessages(list=>[...list,{...event,mine:true,type:"voice"}]);messengerTone("send")};
-    const resume=(event:any)=>{setPartner(event.partner);if(event.matchQuality)setMatchQuality(event.matchQuality);setEnded(null);setEnding(false);endingRef.current=false;endedRef.current=false;activeConversationRef.current=true};
+    const resume=(event:any)=>{setPartner(event.partner);if(event.matchQuality)setMatchQuality(event.matchQuality);setEnded(null);setEnding(false);setIcebreakers(["What's your campus pet peeve?","What's your comfort food lately?"]);endingRef.current=false;endedRef.current=false;activeConversationRef.current=true};
     const partnerTyping=(event:any)=>setTyping(!!event.typing);
     const chatEnded=(event:any)=>{
       activeConversationRef.current=false;
@@ -216,6 +216,8 @@ export default function ConversationView({onExit}:{onExit?:()=>void}){
       clearPendingMatch();
       setTyping(false);
       setEnding(false);
+      setIcebreakers([]);
+      setReply(null);
       setEnded({self:!!event?.endedBySelf,reason:event?.reason||"ended"});
       setMoreOpen(false);setGamesOpen(false);setEmojiOpen(false);setReactionFor(null);setActiveMessageId(null);setGameInvite(null);setGamePending(null);setActiveGame(null);setGameFinished(null);setGameRoundResult(null);
       endedTone()
@@ -693,10 +695,10 @@ function fmt(value:number){return `${String(Math.floor(value/60)).padStart(2,"0"
       </div>
 
       {!ended&&<>
-        <div className="ice-row legacy-ice-row">
+        {icebreakers.length>0&&<div className="ice-row legacy-ice-row">
           <button className="ice-label" type="button" onClick={()=>refreshIcebreakers()} aria-label="Refresh both icebreakers">Icebreaker</button>
           <div className="ice-questions" aria-live="polite">{icebreakers.map((prompt,index)=><button className="ice-question" type="button" key={`${iceVersion}-${index}-${prompt}`} onClick={()=>sendIcebreaker(prompt,index)}>{prompt}</button>)}</div>
-        </div>
+        </div>}
 
         {reply&&<div className="reply-preview" role="status">
           <ReplyArrow/><div><b>Replying to {reply.nickname||"message"}</b><span>{reply.text}</span></div>
