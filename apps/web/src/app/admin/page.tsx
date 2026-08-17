@@ -63,7 +63,7 @@ export default function AdminPage(){
       setAdminMode(data.token,nickname.trim());
       resetSocket();
       const existing=getProfile();
-      saveProfile({nickname:nickname.trim(),campus:existing?.campus||"Other school / Rather not say",preference:existing?.preference||"anyone",vibe:existing?.vibe||"Chill",interests:existing?.interests||[],aboutMe:existing?.aboutMe||"SintaChat administrator",gender:existing?.gender||"unspecified"});
+      saveProfile({nickname:nickname.trim(),campus:existing?.campus||"Other school / Rather not say",preference:existing?.preference||"anyone",vibe:existing?.vibe||"Chill",interests:existing?.interests||[],gender:existing?.gender||"unspecified"});
       setAdmin(true);
       await refresh(data.token)
     }catch(err:any){setError(err?.message||"Admin login failed.")}finally{setBusy(false)}
@@ -127,7 +127,7 @@ export default function AdminPage(){
 
   if(!admin){
     return <><SiteHeader/><main className="admin-page"><section className="admin-card">
-      <div className="admin-logo"><img src="/assets/favicon.svg" alt=""/></div><p className="eyebrow">SINTACHAT ADMIN</p><h1>Enter admin mode.</h1>
+      <div className="admin-logo"><img src="/assets/logo.png" alt=""/></div><p className="eyebrow">SINTACHAT ADMIN</p><h1>Enter admin mode.</h1>
       <p className="admin-note">Anonymous moderation only. No IP addresses, personal identifiers, or unnecessary device details are shown.</p>
       <form onSubmit={login}><label><span>Admin nickname</span><input value={nickname} onChange={e=>setNickname(e.target.value)} maxLength={48} placeholder="Any nickname"/></label><label><span>Password</span><input value={password} onChange={e=>setPassword(e.target.value)} type="password" placeholder="Admin password"/></label>{error&&<p className="form-error">{error}</p>}<button disabled={busy} type="submit">{busy?"Checking...":"Enter admin mode"}</button></form>
     </section></main><SiteFooter/></>
@@ -156,7 +156,7 @@ export default function AdminPage(){
 
   return <div className="admin-console-v8">
     <aside className="admin-sidebar-v8">
-      <a className="admin-brand-v8" href="/"><img src="/assets/favicon.svg" alt=""/><div><b>SintaChat</b><small>ADMIN PANEL</small></div></a>
+      <a className="admin-brand-v8" href="/"><img src="/assets/logo.png" alt=""/><div><b>SintaChat</b><small>ADMIN PANEL</small></div></a>
       <nav>
         <a className="active" href="#dashboard"><span>⌂</span>Dashboard</a>
         <p>MODERATION</p>
@@ -206,7 +206,7 @@ export default function AdminPage(){
       <section className="admin-section-v8" id="actions"><div className="section-heading-v8"><div><p>USER ACTIONS</p><h2>Bans & suspensions</h2></div><span>{filteredRecords.length}</span></div><div className="moderation-record-list">{filteredRecords.length===0&&<p className="admin-empty">No matching moderation records.</p>}{filteredRecords.map(row=><article key={row.sessionId}><div><b>{row.nickname}</b><span>{row.campus||"Campus hidden"}</span><code>{row.sessionId}</code></div><div className="moderation-state">{row.banned&&<strong className="banned">BANNED</strong>}{row.suspendedUntil&&row.suspendedUntil>Date.now()&&<strong className="suspended">SUSPENDED</strong>}{!row.banned&&!(row.suspendedUntil&&row.suspendedUntil>Date.now())&&<strong>CLEAR</strong>}</div><div className="moderation-mini-actions"><button className="danger" disabled={actionKey!==""||row.banned} onClick={()=>moderate(row.sessionId,"ban")}>Ban</button><button disabled={actionKey!==""||!row.banned} onClick={()=>moderate(row.sessionId,"unban")}>Unban</button><button className="warning" disabled={actionKey!==""||!!(row.suspendedUntil&&row.suspendedUntil>Date.now())} onClick={()=>moderate(row.sessionId,"suspend",60)}>Suspend 1h</button><button disabled={actionKey!==""||!(row.suspendedUntil&&row.suspendedUntil>Date.now())} onClick={()=>moderate(row.sessionId,"unsuspend")}>Unsuspend</button></div></article>)}</div></section>
 
       <section className="admin-section-v8" id="appeals"><div className="section-heading-v8"><div><p>APPEALS</p><h2>Moderation appeals</h2></div><span>{filteredAppeals.length}</span></div><div className="admin-case-list">{filteredAppeals.length===0&&<p className="admin-empty">No matching appeals.</p>}{filteredAppeals.map(a=><article key={a.appealId}><header><div><b>{a.nickname}</b><span>{new Date(a.createdAt).toLocaleString()}</span></div><strong className={`case-status ${a.status}`}>{a.status}</strong></header><code>{a.appealId}</code><p>{a.message}</p>{a.status==="open"&&<div className="moderation-mini-actions"><button onClick={()=>reviewAppeal(a.appealId,"approved")}>Approve & clear restriction</button><button className="danger" onClick={()=>reviewAppeal(a.appealId,"denied")}>Deny</button></div>}</article>)}</div></section>
-      <footer className="admin-footer-v8"><img src="/assets/favicon.svg" alt=""/> SintaChat Admin Panel · Built by PUP Sta. Mesa students · Safer anonymous conversations</footer>
+      <footer className="admin-footer-v8"><img src="/assets/logo.png" alt=""/> SintaChat Admin Panel · Built by PUP Sta. Mesa students · Safer anonymous conversations</footer>
     </main>
   </div>
 }

@@ -16,7 +16,7 @@ export default async function Privacy({searchParams}:{searchParams:Promise<{from
       <h2>What the service uses</h2>
       <p>SintaChat may use your anonymous session ID, nickname, selected university/campus, matching preferences, messages needed for live conversations, Freedom Wall submissions, reports, and moderation state to operate the service.</p>
       <h2>What other users see</h2>
-      <p>Other users see the anonymous profile information you choose to provide. Do not place private or identifying information in your nickname, About Me, messages, or Freedom Wall posts.</p>
+      <p>Other users see the anonymous profile information you choose to provide. Do not place private or identifying information in your nickname, messages, or Freedom Wall posts.</p>
       <h2>Moderation</h2>
       <p>Reports, appeals, bans, suspensions, and Freedom Wall review records may be retained as needed to operate moderation features.</p>
       {fromConsent

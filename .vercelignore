@@ -1,0 +1,7 @@
+SintaChat.zip
+mds.zip
+node_modules
+.next
+apps/web/.next
+apps/server/dist
+.git

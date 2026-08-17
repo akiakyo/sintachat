@@ -113,7 +113,7 @@ export default function Wall(){
           <header><b>{post.nickname||"Anonymous"}</b><span>·</span><time>{relative(post.createdAt)}</time><small>{post.university||"University hidden"}</small></header>
           <p>{post.text}</p>
           <footer>
-            <button onClick={()=>{openThread(post)}} aria-label="Open replies"><span>◯</span>{post.replyCount||0}</button>
+            <button onClick={()=>{openThread(post)}} aria-label="Open replies"><img className="wall-comment-icon" src="https://cdn-icons-png.flaticon.com/512/1946/1946429.png" alt=""/>{post.replyCount||0}</button>
             <button className={likedPost===post.postId?"wall-liked":""} onClick={()=>like(post.postId)} aria-label="Like post"><span>{likedPost===post.postId?"♥":"♡"}</span>{post.likes}</button>
             <button className="reply-link" onClick={()=>openReply(post)}>Reply</button>
           </footer>

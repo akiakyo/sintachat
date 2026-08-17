@@ -58,6 +58,10 @@ const GAMES:{type:GameType;name:string;subtitle:string;icon:string}[]=[
   {type:"red-green",name:"Red Flag / Green Flag",subtitle:"Judge the scenario together.",icon:"🚩"},
   {type:"would-you-rather",name:"Would You Rather?",subtitle:"Five fresh choices every round.",icon:"✦"}
 ];
+const ICEBREAKER_FALLBACKS=[
+  "What's a tiny win you had this week?","What song have you had on repeat?","Best cheap campus food?","Morning class or night class?",
+  "What's your campus pet peeve?","What's your comfort food lately?","Library seat or coffee-shop corner?","What school event do you look forward to?"
+];
 
 function VoiceIcon(){return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" fill="none" stroke="currentColor" strokeWidth="1.8"/><path d="M6.8 11.5a5.2 5.2 0 0 0 10.4 0M12 16.8V21M9 21h6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>}
 function GameIcon(){return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.4 8h9.2c2 0 3.4 1.2 4 3.2l1 4.4c.5 2.2-1.9 3.8-3.5 2.3l-2.1-2H8l-2.1 2c-1.6 1.5-4-.1-3.5-2.3l1-4.4C4 9.2 5.4 8 7.4 8Z" fill="none" stroke="currentColor" strokeWidth="1.7"/><path d="M7.3 11.1v3.4M5.6 12.8H9M16.3 11.8h.01M18.2 14h.01" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"/></svg>}
@@ -93,9 +97,13 @@ function VoicePlayer({src,label}:{src:string;label?:number}){
   const [progress,setProgress]=useState(0);
   const [current,setCurrent]=useState(0);
   const [duration,setDuration]=useState(label||0);
-  function toggle(){
+  const [unavailable,setUnavailable]=useState(false);
+  async function toggle(){
     const audio=ref.current;if(!audio)return;
-    if(audio.paused){audio.play();setPlaying(true)}else{audio.pause();setPlaying(false)}
+    if(audio.paused){
+      try{await audio.play();setPlaying(true);setUnavailable(false)}
+      catch{setPlaying(false);setUnavailable(true)}
+    }else{audio.pause();setPlaying(false)}
   }
   function format(value:number){return `${Math.floor(value/60)}:${String(Math.floor(value%60)).padStart(2,"0")}`}
   return <div className="legacy-voice-message">
@@ -104,8 +112,9 @@ function VoicePlayer({src,label}:{src:string;label?:number}){
       onTimeUpdate={e=>{setCurrent(e.currentTarget.currentTime);setProgress(e.currentTarget.duration?e.currentTarget.currentTime/e.currentTarget.duration:0)}}
       onEnded={()=>{setPlaying(false);setProgress(0);setCurrent(0)}}
       onPause={()=>setPlaying(false)}
+      onError={()=>{setPlaying(false);setUnavailable(true)}}
     />
-    <button type="button" className={`voice-play ${playing?"playing":""}`} onClick={toggle}>{playing?"Ⅱ":"▶"}</button>
+    <button type="button" className={`voice-play ${playing?"playing":""}`} onClick={toggle} aria-label={unavailable?"Voice message unavailable":playing?"Pause voice message":"Play voice message"}>{playing?"Ⅱ":"▶"}</button>
     <div className="voice-waveform-static">
       {Array.from({length:28}).map((_,index)=>{
         const seed=(index*17+11)%23;
@@ -114,7 +123,7 @@ function VoicePlayer({src,label}:{src:string;label?:number}){
         return <i key={index} className={played?"played":""} style={{height:`${height}px`}}/>
       })}
     </div>
-    <span className="voice-duration">{format(current)} / {format(duration||label||1)}</span>
+    <span className="voice-duration">{unavailable?"Unavailable":`${format(current)} / ${format(duration||label||1)}`}</span>
   </div>
 }
 
@@ -125,7 +134,9 @@ export default function ConversationView({onExit}:{onExit?:()=>void}){
   const [messages,setMessages]=useState<Msg[]>([]);
   const [input,setInput]=useState("");
   const [typing,setTyping]=useState(false);
-  const [ice,setIce]=useState("What's your campus pet peeve?");
+  const [partnerActive,setPartnerActive]=useState(true);
+  const [icebreakers,setIcebreakers]=useState(["What's your campus pet peeve?","What's your comfort food lately?"]);
+  const [iceVersion,setIceVersion]=useState(0);
   const [reply,setReply]=useState<Reply|null>(null);
   const [reactionFor,setReactionFor]=useState<string|null>(null);
   const [activeMessageId,setActiveMessageId]=useState<string|null>(null);
@@ -170,6 +181,8 @@ export default function ConversationView({onExit}:{onExit?:()=>void}){
   const recordingAnimationRef=useRef<number|null>(null);
   const recordingAudioContextRef=useRef<AudioContext|null>(null);
   const activeConversationRef=useRef(true);
+  const endingRef=useRef(false);
+  const endedRef=useRef(false);
   const slide=useRef<{id:string;x:number;y:number}|null>(null);
   const pointerMovedRef=useRef(false);
   const inputRef=useRef<HTMLInputElement|null>(null);
@@ -195,10 +208,11 @@ export default function ConversationView({onExit}:{onExit?:()=>void}){
     const sent=(event:any)=>{setMessages(list=>[...list,{...event,mine:true}]);messengerTone("send")};
     const voiceRecv=(event:any)=>{setMessages(list=>[...list,{...event,mine:false,type:"voice"}]);messengerTone("receive")};
     const voiceSent=(event:any)=>{setMessages(list=>[...list,{...event,mine:true,type:"voice"}]);messengerTone("send")};
-    const resume=(event:any)=>{setPartner(event.partner);if(event.matchQuality)setMatchQuality(event.matchQuality);setEnded(null);activeConversationRef.current=true};
+    const resume=(event:any)=>{setPartner(event.partner);if(event.matchQuality)setMatchQuality(event.matchQuality);setEnded(null);setEnding(false);endingRef.current=false;endedRef.current=false;activeConversationRef.current=true};
     const partnerTyping=(event:any)=>setTyping(!!event.typing);
     const chatEnded=(event:any)=>{
       activeConversationRef.current=false;
+      endedRef.current=true;
       clearPendingMatch();
       setTyping(false);
       setEnding(false);
@@ -216,7 +230,11 @@ export default function ConversationView({onExit}:{onExit?:()=>void}){
         sentAt:event.sentAt||new Date().toISOString()
       }])
     };
-    const icebreaker=(event:any)=>{if(event?.prompt)setIce(String(event.prompt))};
+    const icebreaker=(event:any)=>{
+      if(Array.isArray(event?.prompts)){setIcebreakers(event.prompts.slice(0,2));setIceVersion(value=>value+1)}
+      else if((event?.slot===0||event?.slot===1)&&event?.prompt){setIcebreakers(current=>current.map((item,index)=>index===event.slot?String(event.prompt):item));setIceVersion(value=>value+1)}
+    };
+    const presence=(event:any)=>setPartnerActive(event?.active!==false);
     const reacted=(event:any)=>setMessages(list=>list.map(item=>item.id===event.messageId?{...item,reactions:event.reactions}:item));
 
     const gameInviteReceived=(event:GameInvite)=>{setGameInvite(event);setGamePending(null);setGameStatus("")};
@@ -238,6 +256,7 @@ export default function ConversationView({onExit}:{onExit?:()=>void}){
     socket.on("chat-ended",chatEnded);
     socket.on("activity-prompt",activity);
     socket.on("icebreaker-prompt",icebreaker);
+    socket.on("partner-presence",presence);
     socket.on("reaction-update",reacted);
     socket.on("game-invite",gameInviteReceived);
     socket.on("game-invite-sent",gameInviteSent);
@@ -251,8 +270,21 @@ export default function ConversationView({onExit}:{onExit?:()=>void}){
 
     return()=>{
       socket.off("message-received",recv);socket.off("message-sent",sent);socket.off("voice-received",voiceRecv);socket.off("voice-sent",voiceSent);
-      socket.off("resume-match",resume);socket.off("partner-typing",partnerTyping);socket.off("chat-ended",chatEnded);socket.off("activity-prompt",activity);socket.off("icebreaker-prompt",icebreaker);socket.off("reaction-update",reacted);
+      socket.off("resume-match",resume);socket.off("partner-typing",partnerTyping);socket.off("chat-ended",chatEnded);socket.off("activity-prompt",activity);socket.off("icebreaker-prompt",icebreaker);socket.off("partner-presence",presence);socket.off("reaction-update",reacted);
       socket.off("game-invite",gameInviteReceived);socket.off("game-invite-sent",gameInviteSent);socket.off("game-invite-accepted",gameInviteAccepted);socket.off("game-invite-declined",gameInviteDeclined);socket.off("game-invite-expired",gameInviteExpired);socket.off("game-round",gameRound);socket.off("game-partner-answered",gamePartnerAnswered);socket.off("game-round-result",gameResult);socket.off("game-finished",gameDone)
+    }
+  },[]);
+
+  useEffect(()=>{
+    const socket=getSocket();
+    const updatePresence=()=>socket.emit("presence",{active:!document.hidden});
+    updatePresence();
+    document.addEventListener("visibilitychange",updatePresence);
+    window.addEventListener("pagehide",updatePresence);
+    return()=>{
+      socket.emit("presence",{active:false});
+      document.removeEventListener("visibilitychange",updatePresence);
+      window.removeEventListener("pagehide",updatePresence);
     }
   },[]);
 
@@ -331,6 +363,17 @@ export default function ConversationView({onExit}:{onExit?:()=>void}){
     setReply(null)
   }
 
+  function sendIcebreaker(prompt:string,index:number){
+    if(ended||ending)return;
+    const text=prompt.trim();if(!text)return;
+    const socket=getSocket();
+    socket.emit("typing",{typing:false});
+    socket.emit("send-message",{text,clientId:crypto.randomUUID(),replyTo:reply},(result:any)=>{
+      if(result?.ok)refreshIcebreakers(index);
+    });
+    setReply(null);
+  }
+
   function pickEmoji(emoji:string){
     setInput(value=>value+emoji);
     requestAnimationFrame(()=>inputRef.current?.focus())
@@ -361,6 +404,31 @@ export default function ConversationView({onExit}:{onExit?:()=>void}){
     setReactionFor(null);
     setActiveMessageId(null);
     requestAnimationFrame(()=>inputRef.current?.focus())
+  }
+
+  function localIcebreakerRefresh(slot?:number){
+    setIcebreakers(current=>{
+      const available=ICEBREAKER_FALLBACKS.filter(prompt=>!current.includes(prompt));
+      const nextPrompt=available[Math.floor(Math.random()*available.length)]||ICEBREAKER_FALLBACKS[0];
+      return slot===0||slot===1?current.map((prompt,index)=>index===slot?nextPrompt:prompt):[nextPrompt,available.find(prompt=>prompt!==nextPrompt)||ICEBREAKER_FALLBACKS[1]];
+    });
+    setIceVersion(value=>value+1);
+  }
+
+  function refreshIcebreakers(slot?:number){
+    localIcebreakerRefresh(slot);
+    const socket=getSocket();
+    const applyServerPrompts=(result:any)=>{
+      if(Array.isArray(result?.prompts)){
+        setIcebreakers(result.prompts.slice(0,2));
+        setIceVersion(value=>value+1);
+      }else if(result?.prompt&&(slot===0||slot===1)){
+        setIcebreakers(current=>current.map((item,index)=>index===slot?String(result.prompt):item));
+        setIceVersion(value=>value+1);
+      }
+    };
+    if(slot===0||slot===1)socket.emit("refresh-icebreaker",{slot},applyServerPrompts);
+    else socket.emit("request-icebreaker",applyServerPrompts);
   }
 
   function toggleMessageActions(message:Msg){
@@ -425,7 +493,7 @@ export default function ConversationView({onExit}:{onExit?:()=>void}){
         draw()
       }catch{}
 
-      const supported=["audio/mp4;codecs=mp4a.40.2","audio/mp4","audio/webm;codecs=opus","audio/webm","audio/ogg;codecs=opus"].find(type=>MediaRecorder.isTypeSupported(type));
+      const supported=["audio/webm;codecs=opus","audio/webm","audio/mp4;codecs=mp4a.40.2","audio/mp4","audio/ogg;codecs=opus"].find(type=>MediaRecorder.isTypeSupported(type));
       const recorder=new MediaRecorder(stream,supported?{mimeType:supported,audioBitsPerSecond:64000}:undefined);
       chunksRef.current=[];cancelVoiceRef.current=false;recordSecondsRef.current=0;setRecordSeconds(0);
 
@@ -465,9 +533,14 @@ export default function ConversationView({onExit}:{onExit?:()=>void}){
       return;
     }
     setEnding(true);
+    endingRef.current=true;
     setEndConfirm(false);
     setMoreOpen(false);
-    setTimeout(()=>getSocket().emit("end-chat",()=>{}),180)
+    setTimeout(()=>{
+      const socket=getSocket();
+      socket.emit("end-chat",()=>{});
+      window.setTimeout(()=>{if(endingRef.current&&!endedRef.current)goHome()},1400);
+    },180)
   }
 
   function nextPerson(){clearPendingMatch();hideConversationView();router.push(getProfile()?"/finding":"/")}
@@ -512,9 +585,13 @@ function fmt(value:number){return `${String(Math.floor(value/60)).padStart(2,"0"
           <div className="partner-name-line">
             <b>{partner?.nickname||"Anonymous Isko"}</b>
             {partner?.isAdmin&&<span className="partner-admin-badge">ADMIN</span>}
-            <i className="partner-online-dot" aria-label="online"/>
+            <i className={`partner-online-dot ${partnerActive?"":"idle"}`} aria-label={partnerActive?"online":"idle"}/>
           </div>
-          <span className="partner-campus">{partner?.campus||"Campus hidden"}</span>
+          <div className="partner-meta">
+            <span className="partner-campus">{partner?.campus||"Campus hidden"}</span>
+            {partner?.vibe && <span className="partner-detail">Vibe: {partner.vibe}</span>}
+            {Array.isArray(partner?.interests) && partner.interests.length > 0 && <span className="partner-detail">Interests: {partner.interests.join(" • ")}</span>}
+          </div>
         </div>
         <div className="chat-time">{fmt(elapsed)}</div>
         <div className="more-wrap">
@@ -567,7 +644,7 @@ function fmt(value:number){return `${String(Math.floor(value/60)).padStart(2,"0"
                   onKeyDown={event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();toggleMessageActions(message)}}}
                   aria-label="Message actions"
                 >
-                  {message.replyTo&&<div className="reply-snippet"><ReplyArrow/><span>{message.replyTo.text}</span></div>}
+                  {message.replyTo&&<div className="reply-snippet"><span>{message.replyTo.text}</span></div>}
                   {message.type==="voice"&&message.audioUrl
                     ? <VoicePlayer src={message.audioUrl} label={message.duration}/>
                     : <span>{message.text}</span>}
@@ -592,12 +669,12 @@ function fmt(value:number){return `${String(Math.floor(value/60)).padStart(2,"0"
           </div>
         })}
 
-        {typing&&!ended&&<div className="typing"><i/><i/><i/></div>}
+        {typing&&!ended&&<div className="typing" aria-live="polite" aria-label={`${partner?.nickname||"Your match"} is typing`}><i/><i/><i/><span>typing</span></div>}
 
         {ended&&<>
           <div className="chat-ended-system-message">{ended.self?"You ended the conversation.":"Your chat partner ended the conversation."}</div>
-          <section className="conversation-ended-card">
-            <div className="ended-icon">✓</div>
+          <section className="conversation-ended-panel">
+            <img src="/assets/conversation_ended.png" alt="" className="conversation-ended-image"/>
             <p className="eyebrow">CONVERSATION ENDED</p>
             <h2>Conversation Ended</h2>
             <p>{ended.self?"You ended the chat.":"The other person ended the chat."}</p>
@@ -617,8 +694,8 @@ function fmt(value:number){return `${String(Math.floor(value/60)).padStart(2,"0"
 
       {!ended&&<>
         <div className="ice-row legacy-ice-row">
-          <button className="ice-label" onClick={()=>getSocket().emit("request-icebreaker",(result:any)=>{if(result?.prompt)setIce(result.prompt)})}>Icebreaker</button>
-          <button className="ice-question" onClick={()=>send(undefined,ice)}>{ice}</button>
+          <button className="ice-label" type="button" onClick={()=>refreshIcebreakers()} aria-label="Refresh both icebreakers">Icebreaker</button>
+          <div className="ice-questions" aria-live="polite">{icebreakers.map((prompt,index)=><button className="ice-question" type="button" key={`${iceVersion}-${index}-${prompt}`} onClick={()=>sendIcebreaker(prompt,index)}>{prompt}</button>)}</div>
         </div>
 
         {reply&&<div className="reply-preview">

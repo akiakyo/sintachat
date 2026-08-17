@@ -20,6 +20,7 @@
   const matchReveal = document.getElementById("matchReveal");
   const matchRevealName = document.getElementById("matchRevealName");
   const matchRevealMeta = document.getElementById("matchRevealMeta");
+  const findingLogo = document.querySelector(".finding-logo img");
   const introLayer = document.getElementById("findingIntroLayer");
   const introTitle = document.getElementById("findingIntroTitle");
   const cancelButton = document.getElementById("cancelFindButton");
@@ -145,6 +146,10 @@
 
     clearInterval(phraseTimer);
     document.body.classList.add("match-found");
+    if (findingLogo) {
+      findingLogo.src = "/assets/connected.png";
+      findingLogo.alt = "Connected";
+    }
 
     // Once actually matched, replacing the full heading is intentional.
     if (title) title.textContent = "found someone.";

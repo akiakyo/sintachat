@@ -19,6 +19,6 @@ export default function RouteTransition(){
 
   return <div className="route-logo-transition" aria-hidden="true">
     <div className="route-logo-transition-glow" />
-    <img src="/assets/favicon.svg" alt="" />
+    <img src="/assets/logo.png" alt="" />
   </div>;
 }

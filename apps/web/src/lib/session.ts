@@ -5,7 +5,6 @@ export type Profile = {
   preference: MatchPreference;
   vibe: string;
   interests: string[];
-  aboutMe: string;
   gender?: "male" | "female" | "unspecified";
 };
 
@@ -80,8 +79,7 @@ export function getProfile(): Profile | null {
     campus: "",
     preference: "anyone",
     vibe: "",
-    interests: [],
-    aboutMe: ""
+    interests: []
   } : null;
 }
 
@@ -138,7 +136,10 @@ export function hideConversationView() {
   if (typeof window !== "undefined") sessionStorage.removeItem(CHAT_VIEW_KEY);
 }
 export function shouldShowConversationView() {
-  return typeof window !== "undefined" && sessionStorage.getItem(CHAT_VIEW_KEY) === "yes";
+  if (typeof window === "undefined") return false;
+  const visible = sessionStorage.getItem(CHAT_VIEW_KEY) === "yes";
+  const pending = getPendingMatch<unknown>();
+  return visible && !!pending;
 }
 
 export function getAdminToken() {

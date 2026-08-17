@@ -11,5 +11,5 @@ export default function ConversationRoute(){
     hideConversationView();
     router.replace("/");
   },[router]);
-  return <main className="route-loader logo-only-loader" aria-label="Loading"><img src="/assets/favicon.svg" alt="SintaChat"/></main>;
+  return <main className="route-loader logo-only-loader" aria-label="Loading"><img src="/assets/logo.png" alt="SintaChat"/></main>;
 }

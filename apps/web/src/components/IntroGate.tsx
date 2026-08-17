@@ -16,6 +16,6 @@ export default function IntroGate(){
  if(!show)return null;
  return <div className="soft-logo-intro" aria-hidden="true">
    <div className="soft-logo-glow"/>
-   <img src="/assets/favicon.svg" alt="SintaChat"/>
+  <img src="/assets/logo.png" alt="SintaChat"/>
  </div>
 }

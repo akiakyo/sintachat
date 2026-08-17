@@ -6,23 +6,66 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import { Server } from "socket.io";
+import { Pool } from "pg";
 
 type Preference = "male"|"female"|"anyone";
-type Profile = {nickname:string;campus:string;preference:Preference;vibe:string;interests:string[];aboutMe?:string;gender?:string;isAdmin?:boolean};
+type Profile = {nickname:string;campus:string;preference:Preference;vibe:string;interests:string[];gender?:string;isAdmin?:boolean};
 type State = {sessionUuid:string;profile:Profile|null;lastMessageAt:number};
+const WEB_ORIGINS=(process.env.WEB_ORIGIN||"http://localhost:3000").split(",").map(origin=>origin.trim()).filter(Boolean);
 
 const app=express();
 app.disable("x-powered-by");
 app.use(helmet({contentSecurityPolicy:false}));
-app.use(cors({origin:process.env.WEB_ORIGIN||"http://localhost:3000",credentials:true}));
+app.use(cors({origin:WEB_ORIGINS,credentials:true}));
 app.use(express.json({limit:"64kb"}));
 app.use(express.urlencoded({extended:false,limit:"16kb"}));
 const server=http.createServer(app);
-const io=new Server(server,{cors:{origin:process.env.WEB_ORIGIN||"http://localhost:3000",credentials:true},maxHttpBufferSize:2_000_000});
+const io=new Server(server,{cors:{origin:WEB_ORIGINS,credentials:true},maxHttpBufferSize:2_000_000});
 const PORT=Number(process.env.PORT||3001);
 const ADMIN_PASSWORD_HASH=String(process.env.ADMIN_PASSWORD_HASH||"");
 const ADMIN_TOKEN_SECRET=String(process.env.ADMIN_TOKEN_SECRET||"");
 const ADMIN_TOKEN_TTL_MS=12*60*60*1000;
+const DATABASE_URL=String(process.env.DATABASE_URL||"");
+const wallPool=DATABASE_URL?new Pool({connectionString:DATABASE_URL,ssl:{rejectUnauthorized:false}}):null;
+
+const wallStorageReady=(async()=>{
+ if(!wallPool)return;
+ await wallPool.query(`
+  CREATE TABLE IF NOT EXISTS freedom_wall_posts (
+   post_id UUID PRIMARY KEY, session_id UUID NOT NULL, nickname VARCHAR(48) NOT NULL,
+   university VARCHAR(80) NOT NULL, text VARCHAR(500) NOT NULL,
+   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), status VARCHAR(10) NOT NULL DEFAULT 'pending',
+   reviewed_at TIMESTAMPTZ, reviewed_by VARCHAR(48)
+  );
+  CREATE TABLE IF NOT EXISTS freedom_wall_likes (
+   post_id UUID NOT NULL REFERENCES freedom_wall_posts(post_id) ON DELETE CASCADE,
+   session_id UUID NOT NULL, PRIMARY KEY (post_id, session_id)
+  );
+  CREATE TABLE IF NOT EXISTS freedom_wall_replies (
+   reply_id UUID PRIMARY KEY, post_id UUID NOT NULL REFERENCES freedom_wall_posts(post_id) ON DELETE CASCADE,
+   session_id UUID NOT NULL, nickname VARCHAR(48) NOT NULL, text VARCHAR(500) NOT NULL,
+   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+  CREATE TABLE IF NOT EXISTS freedom_wall_reply_likes (
+   reply_id UUID NOT NULL REFERENCES freedom_wall_replies(reply_id) ON DELETE CASCADE,
+   session_id UUID NOT NULL, PRIMARY KEY (reply_id, session_id)
+  );
+  CREATE INDEX IF NOT EXISTS freedom_wall_posts_status_created_at_idx ON freedom_wall_posts (status, created_at DESC);
+  CREATE INDEX IF NOT EXISTS freedom_wall_replies_post_created_at_idx ON freedom_wall_replies (post_id, created_at);
+ `);
+})();
+
+async function wallDb(){
+ if(!wallPool)throw new Error("Freedom Wall database is not configured.");
+ await wallStorageReady;
+ return wallPool;
+}
+function wallPost(row:any):WallPost{
+ return {postId:row.post_id,sessionId:row.session_id,nickname:row.nickname,university:row.university,text:row.text,createdAt:new Date(row.created_at).getTime(),likes:Number(row.likes||0),status:row.status,reviewedAt:row.reviewed_at?new Date(row.reviewed_at).getTime():undefined,reviewedBy:row.reviewed_by||undefined}
+}
+function wallReply(row:any):WallReply{
+ return {replyId:row.reply_id,postId:row.post_id,sessionId:row.session_id,nickname:row.nickname,text:row.text,createdAt:new Date(row.created_at).getTime(),likes:Number(row.likes||0)}
+}
 
 function secureEqual(a:string,b:string){
  const aa=Buffer.from(a);const bb=Buffer.from(b);
@@ -136,7 +179,9 @@ const GAME_DEFS:Record<GameType,{label:string;icon:string;questions:GameQuestion
 const states=new Map<string,State>();
 const sessionSockets=new Map<string,string>();
 const profiles=new Map<string,Profile>();
-const queue:string[]=[];
+const waitingRooms:string[][]=[[],[],[]];
+const MATCH_HISTORY_TTL=2*60*60*1000;
+const matchHistory=new Map<string,{count:number;expiresAt:number}>();
 const matchBySession=new Map<string,string>();
 const sessionsByMatch=new Map<string,[string,string]>();
 const messageReactions=new Map<string,Map<string,string>>();
@@ -156,10 +201,6 @@ type WallPost={postId:string;sessionId:string;nickname:string;university:string;
 type WallReply={replyId:string;postId:string;sessionId:string;nickname:string;text:string;createdAt:number;likes:number};
 const reportsById=new Map<string,ReportRecord>();
 const appealsById=new Map<string,AppealRecord>();
-const wallPosts=new Map<string,WallPost>();
-const wallLikes=new Map<string,Set<string>>();
-const wallReplies=new Map<string,WallReply[]>();
-const wallReplyLikes=new Map<string,Set<string>>();
 const pendingGames=new Map<string,PendingGame>();
 const activeGames=new Map<string,ActiveGame>();
 const usedGameQuestionsByMatch=new Map<string,Map<GameType,Set<string>>>();
@@ -240,15 +281,14 @@ app.post("/api/admin/end-conversation",(req,res)=>{
   res.json({ok:true})
 });
 
-app.get("/api/freedom-wall",(_req,res)=>{
-  const posts=[...wallPosts.values()]
-    .filter(post=>post.status==="approved")
-    .map(post=>({...post,replyCount:(wallReplies.get(post.postId)||[]).length}))
-    .sort((a,b)=>b.createdAt-a.createdAt)
-    .slice(0,100);
-  res.json({ok:true,posts})
+app.get("/api/freedom-wall",async(_req,res)=>{
+ try{
+  const db=await wallDb();
+  const result=await db.query(`SELECT post.*, COUNT(DISTINCT likes.session_id)::int AS likes, COUNT(DISTINCT replies.reply_id)::int AS "replyCount" FROM freedom_wall_posts post LEFT JOIN freedom_wall_likes likes ON likes.post_id=post.post_id LEFT JOIN freedom_wall_replies replies ON replies.post_id=post.post_id WHERE post.status='approved' GROUP BY post.post_id ORDER BY post.created_at DESC LIMIT 100`);
+  res.json({ok:true,posts:result.rows.map(row=>({...wallPost(row),replyCount:Number(row.replyCount||0)}))});
+ }catch{res.status(503).json({ok:false,error:"Freedom Wall is temporarily unavailable."})}
 });
-app.post("/api/freedom-wall",(req,res)=>{
+app.post("/api/freedom-wall",async(req,res)=>{
   const sessionId=String(req.body?.sessionId||"");
   const nickname=String(req.body?.nickname||"Anonymous").trim().slice(0,48)||"Anonymous";
   const university=String(req.body?.university||"University hidden").trim().slice(0,80)||"University hidden";
@@ -256,52 +296,55 @@ app.post("/api/freedom-wall",(req,res)=>{
   if(!/^[0-9a-f-]{36}$/i.test(sessionId))return res.status(400).json({ok:false,error:"Invalid anonymous session."});
   if(isSessionRestricted(sessionId).restricted)return res.status(403).json({ok:false,error:"Posting is unavailable for this moderated session."});
   if(text.length<2)return res.status(400).json({ok:false,error:"Write something before posting."});
-  const post:WallPost={postId:crypto.randomUUID(),sessionId,nickname,university,text,createdAt:Date.now(),likes:0,status:"pending"};
-  wallPosts.set(post.postId,post);res.json({ok:true,post,message:"Submitted for moderator approval."})
+  try{
+   const db=await wallDb();const postId=crypto.randomUUID();
+   const result=await db.query(`INSERT INTO freedom_wall_posts (post_id,session_id,nickname,university,text) VALUES ($1,$2,$3,$4,$5) RETURNING *, 0::int AS likes`,[postId,sessionId,nickname,university,text]);
+   res.json({ok:true,post:wallPost(result.rows[0]),message:"Submitted for moderator approval."})
+  }catch{res.status(503).json({ok:false,error:"Freedom Wall is temporarily unavailable."})}
 });
-app.get("/api/freedom-wall/:postId/replies",(req,res)=>{
-  const post=wallPosts.get(String(req.params.postId||""));
-  if(!post||post.status!=="approved")return res.status(404).json({ok:false,error:"Post not found."});
-  res.json({ok:true,replies:[...(wallReplies.get(post.postId)||[])].sort((a,b)=>a.createdAt-b.createdAt)})
+app.get("/api/freedom-wall/:postId/replies",async(req,res)=>{
+ try{
+  const db=await wallDb();const postId=String(req.params.postId||"");
+  const result=await db.query(`SELECT reply.*, COUNT(likes.session_id)::int AS likes FROM freedom_wall_replies reply JOIN freedom_wall_posts post ON post.post_id=reply.post_id LEFT JOIN freedom_wall_reply_likes likes ON likes.reply_id=reply.reply_id WHERE reply.post_id=$1 AND post.status='approved' GROUP BY reply.reply_id ORDER BY reply.created_at`,[postId]);
+  res.json({ok:true,replies:result.rows.map(wallReply)});
+ }catch{res.status(503).json({ok:false,error:"Freedom Wall is temporarily unavailable."})}
 });
-app.post("/api/freedom-wall/:postId/replies",(req,res)=>{
-  const post=wallPosts.get(String(req.params.postId||""));
+app.post("/api/freedom-wall/:postId/replies",async(req,res)=>{
+  const postId=String(req.params.postId||"");
   const sessionId=String(req.body?.sessionId||"");
   const nickname=String(req.body?.nickname||"Anonymous").trim().slice(0,48)||"Anonymous";
   const text=String(req.body?.text||"").trim().slice(0,500);
-  if(!post||post.status!=="approved")return res.status(404).json({ok:false,error:"Post not found."});
   if(!/^[0-9a-f-]{36}$/i.test(sessionId))return res.status(400).json({ok:false,error:"Invalid anonymous session."});
   if(isSessionRestricted(sessionId).restricted)return res.status(403).json({ok:false,error:"Replying is unavailable for this moderated session."});
   if(text.length<1)return res.status(400).json({ok:false,error:"Write a reply first."});
-  const reply:WallReply={replyId:crypto.randomUUID(),postId:post.postId,sessionId,nickname,text,createdAt:Date.now(),likes:0};
-  const replies=wallReplies.get(post.postId)||[];replies.push(reply);wallReplies.set(post.postId,replies);
-  res.json({ok:true,reply,replyCount:replies.length})
+  try{
+   const db=await wallDb();const approved=await db.query(`SELECT 1 FROM freedom_wall_posts WHERE post_id=$1 AND status='approved'`,[postId]);
+   if(!approved.rowCount)return res.status(404).json({ok:false,error:"Post not found."});
+   const result=await db.query(`INSERT INTO freedom_wall_replies (reply_id,post_id,session_id,nickname,text) VALUES ($1,$2,$3,$4,$5) RETURNING *, 0::int AS likes`,[crypto.randomUUID(),postId,sessionId,nickname,text]);
+   const count=await db.query(`SELECT COUNT(*)::int AS count FROM freedom_wall_replies WHERE post_id=$1`,[postId]);
+   res.json({ok:true,reply:wallReply(result.rows[0]),replyCount:Number(count.rows[0].count)})
+  }catch{res.status(503).json({ok:false,error:"Freedom Wall is temporarily unavailable."})}
 });
-app.post("/api/freedom-wall/:postId/replies/:replyId/like",(req,res)=>{
+app.post("/api/freedom-wall/:postId/replies/:replyId/like",async(req,res)=>{
   const postId=String(req.params.postId||"");const replyId=String(req.params.replyId||"");const sessionId=String(req.body?.sessionId||"");
-  const reply=(wallReplies.get(postId)||[]).find(item=>item.replyId===replyId);
-  if(!reply)return res.status(404).json({ok:false,error:"Reply not found."});
-  let set=wallReplyLikes.get(reply.replyId);if(!set){set=new Set();wallReplyLikes.set(reply.replyId,set)}
-  if(set.has(sessionId))set.delete(sessionId);else set.add(sessionId);reply.likes=set.size;
-  res.json({ok:true,likes:reply.likes})
+  try{
+   const db=await wallDb();const reply=await db.query(`SELECT 1 FROM freedom_wall_replies WHERE reply_id=$1 AND post_id=$2`,[replyId,postId]);
+   if(!reply.rowCount)return res.status(404).json({ok:false,error:"Reply not found."});
+   const existing=await db.query(`SELECT 1 FROM freedom_wall_reply_likes WHERE reply_id=$1 AND session_id=$2`,[replyId,sessionId]);
+   if(existing.rowCount)await db.query(`DELETE FROM freedom_wall_reply_likes WHERE reply_id=$1 AND session_id=$2`,[replyId,sessionId]);else await db.query(`INSERT INTO freedom_wall_reply_likes (reply_id,session_id) VALUES ($1,$2)`,[replyId,sessionId]);
+   const count=await db.query(`SELECT COUNT(*)::int AS count FROM freedom_wall_reply_likes WHERE reply_id=$1`,[replyId]);res.json({ok:true,likes:Number(count.rows[0].count)})
+  }catch{res.status(503).json({ok:false,error:"Freedom Wall is temporarily unavailable."})}
 });
-app.get("/api/admin/freedom-wall",(req,res)=>{const admin=requireAdminRequest(req,res);if(!admin)return;res.json({ok:true,posts:[...wallPosts.values()].map(post=>({...post,replyCount:(wallReplies.get(post.postId)||[]).length})).sort((a,b)=>b.createdAt-a.createdAt)})});
-app.post("/api/admin/freedom-wall/:postId",(req,res)=>{
+app.get("/api/admin/freedom-wall",async(req,res)=>{const admin=requireAdminRequest(req,res);if(!admin)return;try{const db=await wallDb();const result=await db.query(`SELECT post.*, COUNT(DISTINCT likes.session_id)::int AS likes, COUNT(DISTINCT replies.reply_id)::int AS "replyCount" FROM freedom_wall_posts post LEFT JOIN freedom_wall_likes likes ON likes.post_id=post.post_id LEFT JOIN freedom_wall_replies replies ON replies.post_id=post.post_id GROUP BY post.post_id ORDER BY post.created_at DESC`);res.json({ok:true,posts:result.rows.map(row=>({...wallPost(row),replyCount:Number(row.replyCount||0)}))})}catch{res.status(503).json({ok:false,error:"Freedom Wall is temporarily unavailable."})}});
+app.post("/api/admin/freedom-wall/:postId",async(req,res)=>{
   const admin=requireAdminRequest(req,res);if(!admin)return;
-  const post=wallPosts.get(String(req.params.postId||""));if(!post)return res.status(404).json({ok:false,error:"Freedom Wall post not found."});
+  const postId=String(req.params.postId||"");
   const action=String(req.body?.action||"");if(!["approve","reject","delete"].includes(action))return res.status(400).json({ok:false,error:"Invalid wall moderation action."});
-  if(action==="delete"){
-    wallPosts.delete(post.postId);wallLikes.delete(post.postId);
-    for(const reply of wallReplies.get(post.postId)||[])wallReplyLikes.delete(reply.replyId);
-    wallReplies.delete(post.postId);
-    return res.json({ok:true,deleted:true})
-  }
-  post.status=action==="approve"?"approved":"rejected";post.reviewedAt=Date.now();post.reviewedBy=String(admin.nickname||"admin");wallPosts.set(post.postId,post);res.json({ok:true,post})
+  try{const db=await wallDb();if(action==="delete"){const result=await db.query(`DELETE FROM freedom_wall_posts WHERE post_id=$1`,[postId]);return result.rowCount?res.json({ok:true,deleted:true}):res.status(404).json({ok:false,error:"Freedom Wall post not found."})}const result=await db.query(`UPDATE freedom_wall_posts SET status=$2, reviewed_at=NOW(), reviewed_by=$3 WHERE post_id=$1 RETURNING *, (SELECT COUNT(*)::int FROM freedom_wall_likes WHERE post_id=$1) AS likes`,[postId,action==="approve"?"approved":"rejected",String(admin.nickname||"admin")]);if(!result.rowCount)return res.status(404).json({ok:false,error:"Freedom Wall post not found."});res.json({ok:true,post:wallPost(result.rows[0])})}catch{res.status(503).json({ok:false,error:"Freedom Wall is temporarily unavailable."})}
 });
-app.post("/api/freedom-wall/:postId/like",(req,res)=>{
-  const post=wallPosts.get(String(req.params.postId||""));const sessionId=String(req.body?.sessionId||"");
-  if(!post||post.status!=="approved")return res.status(404).json({ok:false,error:"Post not found."});
-  let set=wallLikes.get(post.postId);if(!set){set=new Set();wallLikes.set(post.postId,set)}if(set.has(sessionId))set.delete(sessionId);else set.add(sessionId);post.likes=set.size;res.json({ok:true,likes:post.likes})
+app.post("/api/freedom-wall/:postId/like",async(req,res)=>{
+  const postId=String(req.params.postId||"");const sessionId=String(req.body?.sessionId||"");
+  try{const db=await wallDb();const post=await db.query(`SELECT 1 FROM freedom_wall_posts WHERE post_id=$1 AND status='approved'`,[postId]);if(!post.rowCount)return res.status(404).json({ok:false,error:"Post not found."});const existing=await db.query(`SELECT 1 FROM freedom_wall_likes WHERE post_id=$1 AND session_id=$2`,[postId,sessionId]);if(existing.rowCount)await db.query(`DELETE FROM freedom_wall_likes WHERE post_id=$1 AND session_id=$2`,[postId,sessionId]);else await db.query(`INSERT INTO freedom_wall_likes (post_id,session_id) VALUES ($1,$2)`,[postId,sessionId]);const count=await db.query(`SELECT COUNT(*)::int AS count FROM freedom_wall_likes WHERE post_id=$1`,[postId]);res.json({ok:true,likes:Number(count.rows[0].count)})}catch{res.status(503).json({ok:false,error:"Freedom Wall is temporarily unavailable."})}
 });
 app.post("/api/report",(req,res)=>{const conversationId=String(req.body?.conversationId||"");const reporterSessionId=String(req.body?.reporterSessionId||"");const reportedSessionId=String(req.body?.reportedSessionId||"");const reason=String(req.body?.reason||"Other").slice(0,60);const details=String(req.body?.details||"").slice(0,500);if(!conversationId||!reporterSessionId||!reportedSessionId)return res.status(400).json({ok:false,error:"Missing report information."});const r:ReportRecord={reportId:crypto.randomUUID(),conversationId,reporterSessionId,reportedSessionId,reporterNickname:profiles.get(reporterSessionId)?.nickname||"Anonymous",reportedNickname:profiles.get(reportedSessionId)?.nickname||"Anonymous",reason,details,createdAt:Date.now(),status:"open"};reportsById.set(r.reportId,r);res.json({ok:true,reportId:r.reportId})});
 app.post("/api/appeals",(req,res)=>{const sessionId=String(req.body?.sessionId||"");const message=String(req.body?.message||"").trim().slice(0,1000);const mod=getModeration(sessionId);if(!mod.banned&&!(mod.suspendedUntil&&mod.suspendedUntil>Date.now()))return res.status(400).json({ok:false,error:"This anonymous session has no active ban or suspension."});if(message.length<10)return res.status(400).json({ok:false,error:"Please provide more detail."});const a:AppealRecord={appealId:crypto.randomUUID(),sessionId,nickname:profiles.get(sessionId)?.nickname||"Anonymous",message,createdAt:Date.now(),status:"open"};appealsById.set(a.appealId,a);res.json({ok:true,appealId:a.appealId})});
@@ -310,7 +353,7 @@ app.post("/api/admin/reports/:reportId",(req,res)=>{const admin=requireAdminRequ
 app.get("/api/admin/appeals",(req,res)=>{const admin=requireAdminRequest(req,res);if(!admin)return;res.json({ok:true,appeals:[...appealsById.values()].sort((a,b)=>b.createdAt-a.createdAt)})});
 app.post("/api/admin/appeals/:appealId",(req,res)=>{const admin=requireAdminRequest(req,res);if(!admin)return;const a=appealsById.get(String(req.params.appealId||""));if(!a)return res.status(404).json({ok:false,error:"Appeal not found."});const decision=String(req.body?.decision||"");if(!["approved","denied"].includes(decision))return res.status(400).json({ok:false,error:"Invalid decision."});a.status=decision as AppealRecord["status"];a.reviewedBy=String(admin.nickname||"admin");a.reviewedAt=Date.now();if(decision==="approved"){const cur=getModeration(a.sessionId);moderationBySession.set(a.sessionId,{...cur,banned:false,suspendedUntil:null,reason:"Appeal approved",updatedAt:Date.now(),updatedBy:String(admin.nickname||"admin")})}res.json({ok:true,appeal:a})});
 
-app.get("/api/health",(_req,res)=>res.json({ok:true,online:sessionSockets.size,waiting:queue.length}));
+app.get("/api/health",(_req,res)=>res.json({ok:true,online:sessionSockets.size,waiting:waitingRooms.reduce((total,room)=>total+room.length,0)}));
 app.get("/api/config",(_req,res)=>res.json({campuses,vibes,interests,maxInterests:3,maxNicknameLength:24,maxMessageLength:1000}));
 
 app.post("/api/end-chat-beacon",(req,res)=>{
@@ -330,8 +373,14 @@ function validProfile(p:any,isAdmin=false):p is Profile{
  return !!p&&nicknameOk&&campus.length>=2&&campus.length<=120&&["male","female","anyone"].includes(p.preference)&&vibes.includes(p.vibe)&&Array.isArray(p.interests)&&p.interests.length<=3
 }
 function peerOf(session:string){const mid=matchBySession.get(session);if(!mid)return null;const pair=sessionsByMatch.get(mid);if(!pair)return null;return pair[0]===session?pair[1]:pair[0]}
-function emitStats(){io.emit("stats",{online:sessionSockets.size,waiting:queue.length})}
-function removeQueue(s:string){let i;while((i=queue.indexOf(s))>=0)queue.splice(i,1)}
+function queueSize(){return waitingRooms.reduce((total,room)=>total+room.length,0)}
+function emitStats(){io.emit("stats",{online:sessionSockets.size,waiting:queueSize()})}
+function removeQueue(s:string){for(const room of waitingRooms){let i;while((i=room.indexOf(s))>=0)room.splice(i,1)}}
+function addToRandomRoom(s:string){removeQueue(s);waitingRooms[Math.floor(Math.random()*waitingRooms.length)].push(s)}
+function matchKey(a:string,b:string){return a<b?`${a}:${b}`:`${b}:${a}`}
+function previousMatches(a:string,b:string){const key=matchKey(a,b);const record=matchHistory.get(key);if(!record||record.expiresAt<=Date.now()){matchHistory.delete(key);return 0}return record.count}
+function recordMatch(a:string,b:string){matchHistory.set(matchKey(a,b),{count:previousMatches(a,b)+1,expiresAt:Date.now()+MATCH_HISTORY_TTL})}
+function compatibilityChance(count:number){if(count===0)return 100;if(count===1)return 70;if(count===2)return 40;if(count===3)return 20;return 10}
 function hasConnectedSession(sessionUuid:string){
  return (io.sockets.adapter.rooms.get(`session:${sessionUuid}`)?.size||0)>0
 }
@@ -358,12 +407,39 @@ function makePartner(p:Profile){
   campus:p.campus,
   vibe:p.vibe,
   interests:p.interests,
-  aboutMe:p.aboutMe||"",
   gender:p.gender||"unspecified",
   isAdmin:!!p.isAdmin
  }
 }
-function match(session:string){const p=profiles.get(session);if(!p)return false;removeQueue(session);for(let i=0;i<queue.length;i++){const other=queue[i];if(other===session||matchBySession.has(other))continue;if(!hasConnectedSession(other)){queue.splice(i--,1);continue}const op=profiles.get(other);if(!op||!preferenceCompatible(p,op))continue;queue.splice(i,1);const mid=crypto.randomUUID();matchBySession.set(session,mid);matchBySession.set(other,mid);sessionsByMatch.set(mid,[session,other]);io.to(`session:${session}`).emit("matched",{matchUuid:mid,partner:makePartner(op)});io.to(`session:${other}`).emit("matched",{matchUuid:mid,partner:makePartner(p)});emitStats();return true}queue.push(session);io.to(`session:${session}`).emit("queue-status",{waiting:true});emitStats();return false}
+function match(session:string){
+ const p=profiles.get(session);if(!p)return false;
+ removeQueue(session);
+ const roomOrder=shuffle([0,1,2]);
+ let attempts=0;
+ for(const roomIndex of roomOrder){
+  const candidates=shuffle(waitingRooms[roomIndex].slice());
+  for(const other of candidates){
+   if(attempts++>=10)break;
+   const position=waitingRooms[roomIndex].indexOf(other);
+   if(position<0)continue;
+   if(other===session||matchBySession.has(other)){waitingRooms[roomIndex].splice(position,1);continue}
+   if(!hasConnectedSession(other)){waitingRooms[roomIndex].splice(position,1);continue}
+   const op=profiles.get(other);if(!op||!preferenceCompatible(p,op))continue;
+   const chance=compatibilityChance(previousMatches(session,other));
+   if(Math.random()*100>=chance){
+    waitingRooms[roomIndex].splice(position,1);
+    waitingRooms[(roomIndex+1+Math.floor(Math.random()*2))%3].push(other);
+    continue
+   }
+   waitingRooms[roomIndex].splice(position,1);
+   recordMatch(session,other);
+   const mid=crypto.randomUUID();matchBySession.set(session,mid);matchBySession.set(other,mid);sessionsByMatch.set(mid,[session,other]);
+   io.to(`session:${session}`).emit("matched",{matchUuid:mid,partner:makePartner(op)});io.to(`session:${other}`).emit("matched",{matchUuid:mid,partner:makePartner(p)});emitStats();return true
+  }
+  if(attempts>=10)break
+ }
+ addToRandomRoom(session);io.to(`session:${session}`).emit("queue-status",{waiting:true});emitStats();return false
+}
 function shuffle<T>(items:T[]){
  const copy=[...items];
  for(let i=copy.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[copy[i],copy[j]]=[copy[j],copy[i]]}
@@ -450,7 +526,6 @@ io.on("connection",socket=>{const sessionUuid=String(socket.handshake.auth.sessi
     ...profile,
     nickname:String(profile?.nickname||"").trim().slice(0,socket.data.isAdmin?48:24),
     campus:String(profile?.campus||"").trim().slice(0,120),
-    aboutMe:String(profile?.aboutMe||"").trim().slice(0,120),
     interests:Array.isArray(profile?.interests)?profile.interests.filter((x:any)=>interests.includes(x)).slice(0,3):[],
     isAdmin:!!socket.data.isAdmin
   };
@@ -551,9 +626,7 @@ io.on("connection",socket=>{const sessionUuid=String(socket.handshake.auth.sessi
   if(!matchBySession.has(sessionUuid))return done({ok:false,error:"No active conversation."});
   const prompts=shuffle(icebreakers).slice(0,2);
   const event={prompts};
-  const peer=peerOf(sessionUuid);
-  io.to(`session:${sessionUuid}`).emit("icebreaker-prompt",event);
-  if(peer)io.to(`session:${peer}`).emit("icebreaker-prompt",event);
+  socket.emit("icebreaker-prompt",event);
   done({ok:true,prompts})
 });
  socket.on("refresh-icebreaker",(payload:any,done:(r:any)=>void=()=>{})=>{

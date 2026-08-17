@@ -612,6 +612,41 @@ textarea,
   background: transparent !important;
 }
 
+.finding-logo img {
+  width: 112px;
+  height: 112px;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 18px rgba(122,0,25,.18));
+  animation: legacyWaitingMascot 1.8s ease-in-out infinite;
+}
+
+.finding-logo.waiting-state {
+  display: grid;
+  place-items: center;
+}
+
+.match-found .finding-logo img {
+  width: 148px;
+  height: 148px;
+  animation: legacyConnectedMascot .8s cubic-bezier(.2,.8,.2,1) both;
+}
+
+@keyframes legacyWaitingMascot {
+  0%, 100% { transform: translateY(2px) rotate(-2deg); }
+  50% { transform: translateY(-7px) rotate(2deg); }
+}
+
+@keyframes legacyConnectedMascot {
+  0% { opacity: 0; transform: scale(.72) translateY(10px); }
+  65% { opacity: 1; transform: scale(1.08) translateY(-3px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .finding-logo img,
+  .match-found .finding-logo img { animation: none; }
+}
+
 .finding-context {
   min-height: 24px;
   margin-top: 10px;

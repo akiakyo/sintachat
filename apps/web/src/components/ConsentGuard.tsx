@@ -2,8 +2,9 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { hasConsent } from "../lib/session";
+import ConsentScreen from "./ConsentScreen";
 
-const PUBLIC_ROUTES = new Set(["/consent", "/terms", "/safety", "/privacy", "/faq", "/about", "/admin"]);
+const PUBLIC_ROUTES = new Set(["/", "/terms", "/safety", "/privacy", "/faq", "/about", "/admin"]);
 
 export default function ConsentGuard({children}:{children:React.ReactNode}){
  const router=useRouter();
@@ -12,14 +13,19 @@ export default function ConsentGuard({children}:{children:React.ReactNode}){
  const [ready,setReady]=useState(publicRoute);
 
  useEffect(()=>{
+   if(path==="/"){
+     setReady(hasConsent());
+     return;
+   }
    if(publicRoute){setReady(true);return;}
    if(!hasConsent()){
      setReady(false);
-     router.replace("/consent");
+     router.replace("/");
      return;
    }
    setReady(true)
  },[path,publicRoute,router]);
 
- return ready?<>{children}</>:<div className="route-loader logo-only-loader" aria-label="Loading"><img src="/assets/favicon.svg" alt="SintaChat"/></div>;
+ if(path==="/"&&!ready)return <ConsentScreen onAccepted={()=>{setReady(true);router.replace("/")}}/>;
+ return ready?<>{children}</>:<div className="route-loader logo-only-loader" aria-label="Loading"><img src="/assets/logo.png" alt="SintaChat"/></div>;
 }

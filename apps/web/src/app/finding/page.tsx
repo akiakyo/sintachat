@@ -85,7 +85,7 @@ export default function Finding(){
  return <main className={`finding-page finding-v52 ${found?"found":""}`}>
    <div className="finding-v52-backdrop" aria-hidden="true"><i/><i/><i/><i/></div>
    <section className="finding-v52-card">
-     <div className="finding-v52-logo"><span/><img src="/assets/favicon.svg" alt="SintaChat"/></div>
+    <div className={`finding-v52-logo ${found?"connected":"waiting"}`}><span/><img src={found?"/assets/connected.png":"/assets/waiting.png"} alt={found?"Connected":"Finding a match"}/></div>
      <p className="eyebrow">{found?"CONNECTED":"MATCHING"}</p>
      <h1>{found?"Connected":status}</h1>
      <p>{found?"Opening your anonymous conversation...":"Hang on while we look for a compatible student."}</p>
