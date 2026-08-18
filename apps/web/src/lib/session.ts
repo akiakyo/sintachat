@@ -16,6 +16,7 @@ const SOUND_KEY = "sintachat-v1-sounds";
 const ADMIN_TOKEN_KEY = "sintachat-v1-admin-token";
 const ADMIN_NICK_KEY = "sintachat-v1-admin-nickname";
 const CHAT_VIEW_KEY = "sintachat-v1-chat-view";
+const CONVERSATION_PREFERENCES_KEY = "sintachat-v1-conversation-preferences";
 
 const LEGACY = {
   session: ["sintachat-v4-session", "anonisko-v4-session"],
@@ -86,6 +87,15 @@ export function getProfile(): Profile | null {
 export function resetProfile() {
   localStorage.removeItem(PROFILE_KEY);
   localStorage.removeItem("sintachat-v1-nickname");
+  localStorage.removeItem(CONVERSATION_PREFERENCES_KEY);
+}
+
+export function hasConversationPreferences() {
+  return typeof window !== "undefined" && localStorage.getItem(CONVERSATION_PREFERENCES_KEY) === "yes";
+}
+
+export function saveConversationPreferences(vibe: string, interests: string[]) {
+  localStorage.setItem(CONVERSATION_PREFERENCES_KEY, JSON.stringify({ vibe, interests }));
 }
 
 export function hasConsent() {
