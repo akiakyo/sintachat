@@ -1,7 +1,7 @@
 "use client";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { clearPendingMatch, getAdminNickname, getProfile, hideConversationView, isAdminMode, MatchPreference, Profile, preferenceLabel, saveProfile } from "../lib/session";
+import { clearPendingMatch, getAdminNickname, getProfile, hasConversationPreferences, hideConversationView, isAdminMode, MatchPreference, Profile, preferenceLabel, saveConversationPreferences, saveProfile } from "../lib/session";
 import { getSocket } from "../lib/socket";
 import { PHILIPPINE_UNIVERSITY_SUGGESTIONS } from "../lib/philippineUniversities";
 const vibes=["Chill","Need Advice","Rant","Study Talk","Make Friends","Random"];
@@ -12,6 +12,10 @@ export default function MatchForm(){
  const [nickname,setNickname]=useState("");
  const [pref,setPref]=useState<MatchPreference|"">("");
  const [campus,setCampus]=useState("");
+ const [vibe,setVibe]=useState("");
+ const [interests,setInterests]=useState<string[]>([]);
+ const [preferencesOpen,setPreferencesOpen]=useState(false);
+ const [preferencesError,setPreferencesError]=useState("");
  const [error,setError]=useState(""); const [admin,setAdmin]=useState(false);
 
  useEffect(()=>{
@@ -32,15 +36,25 @@ export default function MatchForm(){
    setNickname((adminMode&&getAdminNickname())||saved.nickname||"");
    setPref(saved.preference||"");
    setCampus(saved.campus||"");
+   setVibe(saved.vibe||"");
+   setInterests(Array.isArray(saved.interests)?saved.interests.slice(0,3):[]);
  },[]);
+
+ function toggleInterest(value:string){setInterests(current=>current.includes(value)?current.filter(item=>item!==value):current.length<3?[...current,value]:current)}
 
  function submit(e:FormEvent){
    e.preventDefault(); setError("");
    if(admin ? !nickname.trim() : nickname.trim().length<3){setError(admin?"Admin nickname cannot be empty.":"Nickname must be at least 3 characters.");return;}
    if(!pref||!campus){setError("Please complete the matching options.");return;}
+   if(!hasConversationPreferences()){setPreferencesError("");setPreferencesOpen(true);return;}
+   startMatching();
+ }
+
+ function startMatching(){
    const existing=getProfile();
+   const selectedPreference=pref as MatchPreference;
    const profile:Profile={
-     nickname:nickname.trim(),campus,preference:pref,vibe:existing?.vibe||"Chill",interests:Array.isArray(existing?.interests)?existing.interests:[],
+     nickname:nickname.trim(),campus,preference:selectedPreference,vibe:vibe||existing?.vibe||"Chill",interests:interests.length?interests:(Array.isArray(existing?.interests)?existing.interests:[]),
      gender: existing?.gender || "unspecified"
    };
    saveProfile(profile);
@@ -58,5 +72,17 @@ export default function MatchForm(){
   <section className="form-stage"><label className="form-field"><span>University / Campus</span><input list="philippine-universities" value={campus} onChange={e=>setCampus(e.target.value)} maxLength={120} placeholder="Search or type your university / campus" autoComplete="off"/><datalist id="philippine-universities">{PHILIPPINE_UNIVERSITY_SUGGESTIONS.map(c=><option key={c} value={c}/>)}</datalist><small className="campus-helper">Other school / Rather not say is pinned first. You may also type any Philippine university or campus not yet shown in suggestions.</small></label></section>
    {error&&<p className="form-error">{error}</p>}
   <button className="find-button" type="submit">Find someone</button>
+  {preferencesOpen&&<div className="match-preferences-backdrop" role="presentation">
+    <section className="match-preferences-modal" role="dialog" aria-modal="true" aria-labelledby="match-preferences-title">
+      <div className="match-preferences-art"><img src="/assets/waiting.png" alt=""/></div>
+      <p className="eyebrow">ONE QUICK STEP</p>
+      <h2 id="match-preferences-title">Set the tone for your chat</h2>
+      <p className="match-preferences-note">Choose a vibe and up to three interests before we look for your match. We’ll remember this on this browser.</p>
+      <fieldset><legend>Conversation vibe</legend><div className="chips">{vibes.map(value=><button type="button" key={value} className={vibe===value?"active":""} onClick={()=>setVibe(value)}>{value}</button>)}</div></fieldset>
+      <fieldset><legend>Interests <em>optional, up to 3</em></legend><div className="chips">{interestList.map(value=><button type="button" key={value} className={interests.includes(value)?"active":""} onClick={()=>toggleInterest(value)}>{value}</button>)}</div></fieldset>
+      {preferencesError&&<p className="form-error" role="alert">{preferencesError}</p>}
+      <button className="match-preferences-submit" type="button" disabled={!vibe} onClick={()=>{if(!vibe)return;const existing=getProfile();if(!existing){setPreferencesError("Please complete your profile first.");return}saveProfile({...existing,nickname:nickname.trim(),campus,preference:pref as MatchPreference,vibe,interests});saveConversationPreferences(vibe,interests);setPreferencesOpen(false);startMatching()}}>Start matching</button>
+    </section>
+  </div>}
  </form>
 }

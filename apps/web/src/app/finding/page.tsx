@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getProfile, hasConversationPreferences, preferenceLabel, saveConversationPreferences, savePendingMatch, saveProfile, showConversationView, soundsEnabled } from "../../lib/session";
+import { getProfile, preferenceLabel, savePendingMatch, showConversationView, soundsEnabled } from "../../lib/session";
 import { getSocket } from "../../lib/socket";
 
 
@@ -12,8 +12,6 @@ const MATCHING_TIPS=[
   {title:"Try a game",body:"This or That and Red Flag / Green Flag are built to give both of you something easy to react to."},
   {title:"Respect the vibe",body:"If your match chose Advice, Study Talk, Chill, or Rant, meet the conversation where it is."}
 ];
-const VIBES=["Chill","Need Advice","Rant","Study Talk","Make Friends","Random"];
-const INTERESTS=["Gaming","School","Relationships","Music","Movies","Tech","Sports","Memes","Study","Random"];
 
 function searchTone(){
   if(!soundsEnabled())return;
@@ -51,10 +49,6 @@ export default function Finding(){
  const [status,setStatus]=useState("Finding...");
  const [found,setFound]=useState(false);
  const [tipIndex,setTipIndex]=useState(0);
- const [preferencesOpen,setPreferencesOpen]=useState(false);
- const [vibe,setVibe]=useState("");
- const [interests,setInterests]=useState<string[]>([]);
- const [preferencesError,setPreferencesError]=useState("");
  const profile=getProfile();
 
  useEffect(()=>{
@@ -70,7 +64,7 @@ export default function Finding(){
    searchTone();
    const onMatched=(payload:any)=>{
      savePendingMatch(payload); matchTone(); setFound(true); setStatus("Match found!");
-    if(hasConversationPreferences())setTimeout(()=>{showConversationView();router.replace("/")},900);else setPreferencesOpen(true);
+    setTimeout(()=>{showConversationView();router.replace("/")},900);
    };
    socket.on("matched",onMatched);
    socket.emit("set-profile",profile,(r:any)=>{
@@ -81,23 +75,12 @@ export default function Finding(){
          savePendingMatch({matchUuid:x.matchUuid,partner:x.partner});
          setFound(true);
          setStatus(x.message||`You are connected with ${x.partner.nickname}.`);
-         if(hasConversationPreferences())setTimeout(()=>{showConversationView();router.replace("/")},650);else setPreferencesOpen(true);
+         setTimeout(()=>{showConversationView();router.replace("/")},650);
        }
      })
    });
    return()=>socket.off("matched",onMatched)
  },[router]);
-
- function toggleInterest(value:string){setInterests(current=>current.includes(value)?current.filter(item=>item!==value):current.length<3?[...current,value]:current)}
- function savePreferences(){
-   if(!vibe)return;
-   const current=getProfile(); if(!current)return;
-   saveProfile({...current,vibe,interests}); saveConversationPreferences(vibe,interests);
-   getSocket().emit("set-profile",{...current,vibe,interests},(result:any)=>{
-     if(!result?.ok){setPreferencesError(result?.error||"Could not save your chat preferences.");return}
-     showConversationView();router.replace("/")
-   });
- }
 
  return <main className={`finding-page finding-v52 ${found?"found":""}`}>
    <div className="finding-v52-backdrop" aria-hidden="true"><i/><i/><i/><i/></div>
@@ -115,17 +98,5 @@ export default function Finding(){
      {found&&<div className="finding-connected-arrow">↓</div>}
      {!found&&<button onClick={()=>{getSocket().emit("cancel-search");router.push("/")}}>Cancel</button>}
    </section>
-   {preferencesOpen&&<div className="match-preferences-backdrop" role="presentation">
-     <section className="match-preferences-modal" role="dialog" aria-modal="true" aria-labelledby="match-preferences-title">
-       <div className="match-preferences-art"><img src="/assets/waiting.png" alt=""/></div>
-       <p className="eyebrow">YOUR MATCH IS READY</p>
-       <h2 id="match-preferences-title">Set the tone for your chat</h2>
-       <p className="match-preferences-note">Choose a vibe and up to three interests. We’ll remember this on this browser.</p>
-       <fieldset><legend>Conversation vibe</legend><div className="chips">{VIBES.map(value=><button type="button" key={value} className={vibe===value?"active":""} onClick={()=>setVibe(value)}>{value}</button>)}</div></fieldset>
-       <fieldset><legend>Interests <em>optional, up to 3</em></legend><div className="chips">{INTERESTS.map(value=><button type="button" key={value} className={interests.includes(value)?"active":""} onClick={()=>toggleInterest(value)}>{value}</button>)}</div></fieldset>
-      {preferencesError&&<p className="form-error" role="alert">{preferencesError}</p>}
-       <button className="match-preferences-submit" type="button" disabled={!vibe} onClick={savePreferences}>Open conversation</button>
-     </section>
-   </div>}
  </main>
 }
