@@ -91,7 +91,13 @@ export function resetProfile() {
 }
 
 export function hasConversationPreferences() {
-  return typeof window !== "undefined" && sessionStorage.getItem(CONVERSATION_PREFERENCES_KEY) === "yes";
+  if (typeof window === "undefined") return false;
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(CONVERSATION_PREFERENCES_KEY) || "null");
+    return Boolean(saved?.vibe && Array.isArray(saved.interests));
+  } catch {
+    return false;
+  }
 }
 
 export function saveConversationPreferences(vibe: string, interests: string[]) {
