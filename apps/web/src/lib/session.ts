@@ -87,15 +87,15 @@ export function getProfile(): Profile | null {
 export function resetProfile() {
   localStorage.removeItem(PROFILE_KEY);
   localStorage.removeItem("sintachat-v1-nickname");
-  localStorage.removeItem(CONVERSATION_PREFERENCES_KEY);
+  sessionStorage.removeItem(CONVERSATION_PREFERENCES_KEY);
 }
 
 export function hasConversationPreferences() {
-  return typeof window !== "undefined" && localStorage.getItem(CONVERSATION_PREFERENCES_KEY) === "yes";
+  return typeof window !== "undefined" && sessionStorage.getItem(CONVERSATION_PREFERENCES_KEY) === "yes";
 }
 
 export function saveConversationPreferences(vibe: string, interests: string[]) {
-  localStorage.setItem(CONVERSATION_PREFERENCES_KEY, JSON.stringify({ vibe, interests }));
+  sessionStorage.setItem(CONVERSATION_PREFERENCES_KEY, JSON.stringify({ vibe, interests }));
 }
 
 export function hasConsent() {
