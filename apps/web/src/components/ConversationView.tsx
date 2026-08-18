@@ -173,7 +173,6 @@ export default function ConversationView({onExit}:{onExit?:()=>void}){
   const [gameSeconds,setGameSeconds]=useState(15);
   const [gameStatus,setGameStatus]=useState("");
   const [connectionState,setConnectionState]=useState<"connected"|"reconnecting"|"disconnected">("connected");
-  const [skipConfirm,setSkipConfirm]=useState(false);
 
   const endRef=useRef<HTMLDivElement>(null);
   const mediaRef=useRef<MediaRecorder|null>(null);
@@ -556,10 +555,6 @@ export default function ConversationView({onExit}:{onExit?:()=>void}){
   }
 
   function nextPerson(){clearPendingMatch();hideConversationView();router.push(getProfile()?"/finding":"/")}
-  function skipMatch(){
-    if(!skipConfirm){setSkipConfirm(true);setTimeout(()=>setSkipConfirm(false),3200);return}
-    setSkipConfirm(false);activeConversationRef.current=false;clearPendingMatch();getSocket().emit("end-chat",()=>{});hideConversationView();router.push(getProfile()?"/finding":"/")
-  }
   function toggleSound(){const next=!soundOn;setSoundOn(next);setSoundsEnabled(next);setMoreOpen(false)}
   
   async function moderatePartner(action:"ban"|"unban"|"suspend"|"unsuspend",minutes=60){
@@ -733,7 +728,6 @@ function fmt(value:number){return `${String(Math.floor(value/60)).padStart(2,"0"
               <button className="voice-send" type="button" onClick={()=>finishVoice(true)}>Send</button>
             </div>
           : <form className="composer animo-composer-layout" onSubmit={send}>
-              <button type="button" className={`composer-skip-button ${skipConfirm?"confirming":""}`} onClick={skipMatch} disabled={ending||connectionState!=="connected"} title={skipConfirm?"Confirm find someone new":"Find someone new"}>{skipConfirm?"Sure?":"Next"}</button>
               <button type="button" className={`composer-end-button ${endConfirm?"confirming":""}`} onClick={endNow} disabled={ending||connectionState!=="connected"}>{ending?"Ending...":endConfirm?"Sure?":"End"}</button>
 
               <input
