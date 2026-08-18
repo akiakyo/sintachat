@@ -1,48 +1,102 @@
 # SintaChat
 
-SintaChat is a real-time anonymous chat and matching platform built for student communities. It lets users connect with a stranger, start a conversation, exchange messages, react in chat, send voice notes, and safely move on after each match.
+<p align="left">
 
-## About the product
+<a href="https://sintachat.com">
+<img src="https://img.shields.io/badge/Website-sintachat.com-FF6B9D?style=social&logo=googlechrome"/>
+</a>
 
-SintaChat is designed to feel lightweight, anonymous, and social. The app focuses on quick, respectful interaction without requiring users to create a heavy profile. It includes:
+</p>
 
-- anonymous match-based conversations
-- text chat with reactions and emojis
-- voice message recording and playback
-- in-chat activities and games
-- a public Freedom Wall
-- admin moderation tools for safety
+SintaChat is a real-time anonymous chat and matching platform built for student communities. It allows users to connect with strangers, start conversations, exchange messages, react in chat, send voice notes, and safely move on after every match.
+
+---
+
+## About the Product
+
+SintaChat is designed to feel lightweight, anonymous, and social. The platform focuses on quick, respectful interactions without requiring users to create a heavy profile.
+
+Features include:
+
+- Anonymous match-based conversations
+- Real-time text chat with reactions and emojis
+- Voice message recording and playback
+- In-chat activities and games
+- Public Freedom Wall
+- Admin moderation tools for safety
 
 The product is optimized for a privacy-first experience with clear consent flows and a clean mobile-friendly interface.
 
-## Project structure
+---
+
+## Project Structure
 
 This repository is organized as a monorepo:
 
-- apps/web — Next.js frontend
-- apps/server — Express + Socket.IO realtime backend
-- legacy-v3 — archived older version kept for reference
+```text
+apps/web       → Next.js frontend
+apps/server    → Express + Socket.IO realtime backend
+legacy-v3      → Archived older version kept for reference
+```
 
-## Tech stack
+---
 
-- Next.js 15
-- React 19
-- TypeScript
-- Socket.IO
-- Prisma + PostgreSQL (Neon)
-- Vercel for frontend hosting
-- Railway for backend hosting
-- bcrypt for admin password hashing
+## Tech Stack
 
-## Product pages
+<p align="left">
 
-- Home / matching
-- Consent, privacy, terms, safety, FAQ, and about pages
-- Conversation room
+<img src="https://img.shields.io/badge/Next.js_15-000000?style=plastic&logo=nextdotjs&logoColor=white"/>
+<img src="https://img.shields.io/badge/React_19-61DAFB?style=plastic&logo=react&logoColor=black"/>
+<img src="https://img.shields.io/badge/TypeScript-3178C6?style=plastic&logo=typescript&logoColor=white"/>
+
+<br>
+
+<img src="https://img.shields.io/badge/Socket.IO-010101?style=plastic&logo=socketdotio&logoColor=white"/>
+<img src="https://img.shields.io/badge/Express.js-000000?style=plastic&logo=express&logoColor=white"/>
+<img src="https://img.shields.io/badge/Prisma-2D3748?style=plastic&logo=prisma&logoColor=white"/>
+
+<br>
+
+<img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=plastic&logo=postgresql&logoColor=white"/>
+<img src="https://img.shields.io/badge/Neon-00E599?style=plastic&logo=postgresql&logoColor=white"/>
+
+<br>
+
+<img src="https://img.shields.io/badge/Vercel-000000?style=plastic&logo=vercel&logoColor=white"/>
+<img src="https://img.shields.io/badge/Railway-0B0D0E?style=plastic&logo=railway&logoColor=white"/>
+<img src="https://img.shields.io/badge/bcrypt-338?style=plastic&logo=security&logoColor=white"/>
+
+</p>
+
+---
+
+## Product Pages
+
+<p align="left">
+
+<img src="https://img.shields.io/badge/Home-Matching-FF6B9D?style=plastic"/>
+<img src="https://img.shields.io/badge/Chat-Realtime-5865F2?style=plastic"/>
+<img src="https://img.shields.io/badge/Freedom_Wall-Social-00C853?style=plastic"/>
+<img src="https://img.shields.io/badge/Admin-Moderation-FF9800?style=plastic"/>
+
+</p>
+
+Included pages:
+
+- Home / Matching
+- Consent
+- Privacy Policy
+- Terms
+- Safety
+- FAQ
+- About
+- Conversation Room
 - Freedom Wall
-- Admin dashboard
+- Admin Dashboard
 
-## Local development
+---
+
+## Local Development
 
 From the project root:
 
@@ -63,53 +117,92 @@ Backend:
 http://localhost:3001
 ```
 
-## Production deployment
+---
 
-The live production site is:
+## Production Deployment
+
+<p align="left">
+
+<img src="https://img.shields.io/badge/Production-sintachat.com-FF6B9D?style=plastic&logo=googlechrome"/>
+<img src="https://img.shields.io/badge/Frontend-Vercel-000000?style=plastic&logo=vercel"/>
+<img src="https://img.shields.io/badge/Backend-Railway-0B0D0E?style=plastic&logo=railway"/>
+
+</p>
+
+Live production site:
 
 ```text
-https://sintachat.vercel.app
+https://sintachat.com
 ```
 
 The realtime backend is hosted separately on Railway and connects to the frontend through the Socket.IO URL.
 
-Important deployment rule:
+Important deployment rules:
 
-- Only the main Vercel project named sintachat should be used for production.
-- Do not keep duplicate production projects like sintachatv2 active for the same app.
-- A duplicate project can cause deployment confusion and 404 issues.
+- Only the main Vercel project named `sintachat` should be used for production.
+- Do not keep duplicate production projects such as `sintachatv2` active.
+- Duplicate deployments may cause routing conflicts and unexpected 404 errors.
 
-## Environment variables
+---
 
-The app uses environment variables for:
+## Environment Variables
 
-- Prisma / Neon database access
-- consent policy version
-- the frontend socket URL
-- admin password hash and token secret
+The application uses environment variables for:
 
-Do not commit real secrets to GitHub.
+- Prisma / Neon database connection
+- Consent policy version
+- Frontend Socket.IO URL
+- Admin password hash
+- Authentication token secret
 
-## Admin access
+Never commit real secrets to GitHub.
 
-The admin area is available at:
+---
+
+## Admin Access
+
+<p align="left">
+
+<img src="https://img.shields.io/badge/Admin_Dashboard-Available-FF9800?style=plastic&logo=security"/>
+
+</p>
+
+Admin dashboard:
 
 ```text
-https://sintachat.vercel.app/admin
+https://sintachat.com/admin
 ```
 
-Admin credentials are stored in backend environment variables and hashed before comparison.
+Admin credentials are stored securely in backend environment variables and hashed before comparison.
 
-## Safety and moderation
+---
 
-SintaChat includes moderation and safety tools to help keep chats respectful and safe. Admin tools can handle:
+## Safety and Moderation
 
-- bans
-- unbans
-- suspensions
-- conversation termination
-- active session review
+SintaChat includes moderation and safety features to maintain respectful conversations.
+
+Admin tools include:
+
+- User bans
+- User unbans
+- Account suspension
+- Conversation termination
+- Active session review
+
+---
+
+## Social
+
+<p align="left">
+
+<a href="https://sintachat.com">
+<img src="https://img.shields.io/badge/SintaChat-sintachat.com-FF6B9D?style=social&logo=googlechrome"/>
+</a>
+
+</p>
+
+---
 
 ## Notes
 
-This project is intended to remain a focused, production-ready anonymous chat experience with a clean architecture and safe moderation system.
+SintaChat is built as a focused, production-ready anonymous chat experience with a clean architecture, real-time communication system, and privacy-focused moderation workflow.
