@@ -95,6 +95,7 @@ export default function Finding(){
        <span>{MATCHING_TIPS[tipIndex].body}</span>
        <div className="finding-tip-progress" aria-hidden="true"><i/></div>
      </div>}
+     {!found&&<div className="finding-pulse"><i/><span>Searching across the SintaChat campus network</span><b>LIVE</b></div>}
      {found&&<div className="finding-connected-arrow">↓</div>}
      {!found&&<button onClick={()=>{getSocket().emit("cancel-search");router.push("/")}}>Cancel</button>}
    </section>

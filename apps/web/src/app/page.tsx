@@ -51,8 +51,14 @@ export default function Home(){
      <section className="hero home-v52-hero">
        <p className="eyebrow home-eyebrow home-anim-in home-anim-delay-1">STUDENT ANON CHAT</p>
        <h1 className="wordmark home-anim-in home-anim-delay-2">SintaChat</h1>
-       <h2 className="home-anim-in home-anim-delay-3">Connect with students from across the Philippines.</h2>
-       <p className="home-anim-in home-anim-delay-4">Connect anonymously, spark a conversation, and swap real campus stories with students from universities across the Philippines.</p>
+       <h2 className="home-anim-in home-anim-delay-3">Find someone who gets your vibe.</h2>
+       <p className="home-anim-in home-anim-delay-4">Anonymous conversations, campus stories, and real connection across the Philippines.</p>
+
+       <div className="home-identity-strip home-anim-in home-anim-delay-4" aria-label="SintaChat identity">
+         <article><b>Vibe-first</b><span>Match around how you feel.</span></article>
+         <article><b>Campus-wide</b><span>Meet beyond your school.</span></article>
+         <article><b>18+ anonymous</b><span>Privacy and respect first.</span></article>
+       </div>
 
        <MatchForm/>
 

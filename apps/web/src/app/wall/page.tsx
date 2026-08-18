@@ -22,6 +22,7 @@ export default function Wall(){
   const[replyName,setReplyName]=useState("");
   const[replyStatus,setReplyStatus]=useState("");
   const[likedPost,setLikedPost]=useState<string|null>(null);
+  const prompts=["Campus win","Late-night thought","Need advice","Song dedication"];
 
   async function load(){
     setLoading(true);
@@ -50,6 +51,7 @@ export default function Wall(){
     finally{setThreadLoading(false)}
   }
   function openReply(post:WallPost){setReplyTo(post);setReplyText("");setReplyName("");setReplyStatus("")}
+  function usePrompt(prompt:string){setText(`${prompt}: `);setComposerOpen(true)}
   async function submitReply(e:FormEvent){
     e.preventDefault();if(!replyTo||!replyText.trim())return;
     setReplyStatus("Posting reply...");
@@ -87,6 +89,7 @@ export default function Wall(){
       <p>Drop a thought, find a familiar story, or leave someone a little kindness.</p>
       <label className="wall-search-v8"><span>⌕</span><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search names or posts"/></label>
       <div className="wall-v9-livebar"><span><i/> Community wall <b>{posts.length}</b></span><button type="button" onClick={load} disabled={loading}>{loading?"Refreshing…":"Refresh feed"}</button></div>
+      <div className="wall-prompt-row" aria-label="Post prompts">{prompts.map(prompt=><button type="button" key={prompt} onClick={()=>usePrompt(prompt)}>{prompt}</button>)}</div>
     </section>
 
     <button className="wall-quick-composer-v8" onClick={()=>setComposerOpen(true)}><span>?</span><b>Share your story...</b></button>

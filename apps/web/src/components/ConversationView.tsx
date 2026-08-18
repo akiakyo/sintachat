@@ -613,7 +613,7 @@ function fmt(value:number){return `${String(Math.floor(value/60)).padStart(2,"0"
         </div>
       </header>
 
-      <div className="room-title"><b>Main chat</b><span>anonymous one-on-one conversation</span></div>{matchQuality&&<div className="match-quality-banner"><div><small>{matchQuality.label||"Matched"}</small><b>{matchQuality.reason||"Compatible anonymous match"}</b></div><span>{Math.round(matchQuality.score||0)}%</span></div>}
+      <div className="room-title"><b>Main chat</b><span>anonymous one-on-one conversation</span></div>{matchQuality&&<div className="match-quality-banner"><div><small>{matchQuality.label||"Matched for your vibe"}</small><b>{matchQuality.reason||"A compatible anonymous conversation"}</b><span>Built from shared conversation preferences</span></div><strong>{Math.round(matchQuality.score||0)}<small>% fit</small></strong></div>}
       {timedNotice&&<div className="conversation-timed-notice">{timedNotice}</div>}
 
       <div className="messages">

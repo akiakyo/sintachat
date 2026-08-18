@@ -37,7 +37,8 @@ export default function ConsentScreen({onAccepted}:{onAccepted:()=>void}){
 
    <section className="consent-entry-card" aria-labelledby="consent-heading">
      <div className="consent-card-heading"><p className="eyebrow">BEFORE ENTERING</p><h2 id="consent-heading">Your agreement</h2><p>Read the essentials, then confirm both statements to enter SintaChat.</p></div>
-     <div className="consent-rule-list">
+    <div className="consent-step-rail" aria-label="How SintaChat works"><span className="active"><b>1</b><small>Agree</small></span><i/><span><b>2</b><small>Choose your vibe</small></span><i/><span><b>3</b><small>Start talking</small></span></div>
+    <div className="consent-rule-list">
        <article><b>Be real about who you are</b><span>Do not impersonate another person or present someone else&apos;s information as your own.</span></article>
        <article><b>Protect your privacy</b><span>Do not request, post, or pressure anyone to share identifying or sensitive details.</span></article>
        <article><b>Use the exit and report tools</b><span>Leave any conversation at any time and report conduct that breaks the rules.</span></article>
