@@ -690,7 +690,7 @@ function fmt(value:number){return `${String(Math.floor(value/60)).padStart(2,"0"
                   onClick={()=>{setFeedback(rating);getSocket().emit("conversation-feedback",{rating},()=>{})}}>{label}</button>
               })}</div>
             </div>
-            <button className="next-chat-button" onClick={nextPerson}>Next?</button>
+            <button className="next-chat-button" onClick={nextPerson}>Find someone new</button>
           </section>
         </>}
         <div ref={endRef}/>
