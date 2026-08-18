@@ -172,6 +172,8 @@ export default function ConversationView({onExit}:{onExit?:()=>void}){
   const [gameFinished,setGameFinished]=useState<GameFinished|null>(null);
   const [gameSeconds,setGameSeconds]=useState(15);
   const [gameStatus,setGameStatus]=useState("");
+  const [connectionState,setConnectionState]=useState<"connected"|"reconnecting"|"disconnected">("connected");
+  const [skipConfirm,setSkipConfirm]=useState(false);
 
   const endRef=useRef<HTMLDivElement>(null);
   const mediaRef=useRef<MediaRecorder|null>(null);
@@ -209,7 +211,10 @@ export default function ConversationView({onExit}:{onExit?:()=>void}){
     const sent=(event:any)=>{setMessages(list=>[...list,{...event,mine:true}]);messengerTone("send")};
     const voiceRecv=(event:any)=>{setMessages(list=>[...list,{...event,mine:false,type:"voice"}]);messengerTone("receive")};
     const voiceSent=(event:any)=>{setMessages(list=>[...list,{...event,mine:true,type:"voice"}]);messengerTone("send")};
-    const resume=(event:any)=>{setPartner(event.partner);if(event.matchQuality)setMatchQuality(event.matchQuality);setEnded(null);setEnding(false);setIcebreakers(["What's your campus pet peeve?","What's your comfort food lately?"]);endingRef.current=false;endedRef.current=false;activeConversationRef.current=true};
+    const resume=(event:any)=>{setPartner(event.partner);if(event.matchQuality)setMatchQuality(event.matchQuality);setConnectionState("connected");setEnded(null);setEnding(false);setIcebreakers(["What's your campus pet peeve?","What's your comfort food lately?"]);endingRef.current=false;endedRef.current=false;activeConversationRef.current=true};
+    const connected=()=>setConnectionState("connected");
+    const disconnected=()=>{if(activeConversationRef.current&&!endedRef.current)setConnectionState("reconnecting")};
+    const connectError=()=>setConnectionState("disconnected");
     const partnerTyping=(event:any)=>setTyping(!!event.typing);
     const chatEnded=(event:any)=>{
       activeConversationRef.current=false;
@@ -270,11 +275,14 @@ export default function ConversationView({onExit}:{onExit?:()=>void}){
     socket.on("game-partner-answered",gamePartnerAnswered);
     socket.on("game-round-result",gameResult);
     socket.on("game-finished",gameDone);
+    socket.on("connect",connected);
+    socket.on("disconnect",disconnected);
+    socket.on("connect_error",connectError);
 
     return()=>{
       socket.off("message-received",recv);socket.off("message-sent",sent);socket.off("voice-received",voiceRecv);socket.off("voice-sent",voiceSent);
       socket.off("resume-match",resume);socket.off("partner-typing",partnerTyping);socket.off("chat-ended",chatEnded);socket.off("activity-prompt",activity);socket.off("icebreaker-prompt",icebreaker);socket.off("partner-presence",presence);socket.off("reaction-update",reacted);
-      socket.off("game-invite",gameInviteReceived);socket.off("game-invite-sent",gameInviteSent);socket.off("game-invite-accepted",gameInviteAccepted);socket.off("game-invite-declined",gameInviteDeclined);socket.off("game-invite-expired",gameInviteExpired);socket.off("game-round",gameRound);socket.off("game-partner-answered",gamePartnerAnswered);socket.off("game-round-result",gameResult);socket.off("game-finished",gameDone)
+      socket.off("game-invite",gameInviteReceived);socket.off("game-invite-sent",gameInviteSent);socket.off("game-invite-accepted",gameInviteAccepted);socket.off("game-invite-declined",gameInviteDeclined);socket.off("game-invite-expired",gameInviteExpired);socket.off("game-round",gameRound);socket.off("game-partner-answered",gamePartnerAnswered);socket.off("game-round-result",gameResult);socket.off("game-finished",gameDone);socket.off("connect",connected);socket.off("disconnect",disconnected);socket.off("connect_error",connectError)
     }
   },[]);
 
@@ -548,6 +556,10 @@ export default function ConversationView({onExit}:{onExit?:()=>void}){
   }
 
   function nextPerson(){clearPendingMatch();hideConversationView();router.push(getProfile()?"/finding":"/")}
+  function skipMatch(){
+    if(!skipConfirm){setSkipConfirm(true);setTimeout(()=>setSkipConfirm(false),3200);return}
+    setSkipConfirm(false);activeConversationRef.current=false;clearPendingMatch();getSocket().emit("end-chat",()=>{});hideConversationView();router.push(getProfile()?"/finding":"/")
+  }
   function toggleSound(){const next=!soundOn;setSoundOn(next);setSoundsEnabled(next);setMoreOpen(false)}
   
   async function moderatePartner(action:"ban"|"unban"|"suspend"|"unsuspend",minutes=60){
@@ -613,7 +625,7 @@ function fmt(value:number){return `${String(Math.floor(value/60)).padStart(2,"0"
         </div>
       </header>
 
-      <div className="room-title"><b>Main chat</b><span>anonymous one-on-one conversation</span></div>{matchQuality&&<div className="match-quality-banner"><div><small>{matchQuality.label||"Matched for your vibe"}</small><b>{matchQuality.reason||"A compatible anonymous conversation"}</b><span>Built from shared conversation preferences</span></div><strong>{Math.round(matchQuality.score||0)}<small>% fit</small></strong></div>}
+      <div className="room-title"><b>Main chat</b><span>anonymous one-on-one conversation</span></div>{connectionState!=="connected"&&!ended&&<div className={`chat-connection-banner ${connectionState}`}><i/>{connectionState==="reconnecting"?"Connection interrupted. Reconnecting…":"You are offline. Messages are paused."}</div>}{matchQuality&&<div className="match-quality-banner"><div><small>{matchQuality.label||"Matched for your vibe"}</small><b>{matchQuality.reason||"A compatible anonymous conversation"}</b><span>Built from shared conversation preferences</span></div><strong>{Math.round(matchQuality.score||0)}<small>% fit</small></strong></div>}
       {timedNotice&&<div className="conversation-timed-notice">{timedNotice}</div>}
 
       <div className="messages">
@@ -622,7 +634,7 @@ function fmt(value:number){return `${String(Math.floor(value/60)).padStart(2,"0"
         <div className="chat-watermark" aria-hidden="true"><span>SintaChat.com</span></div>
         <div className="gesture-hint" aria-hidden="true">Tap or hover a message for reply &amp; reactions <i>•</i> Swipe right to reply</div>
 
-        {messages.map(message=>{
+        {messages.map((message,index)=>{
           if(message.type==="activity"){
             return <div className="activity-chat-card message-enter" key={message.id}>
               <span>{message.label||"Activity"}</span>
@@ -632,7 +644,10 @@ function fmt(value:number){return `${String(Math.floor(value/60)).padStart(2,"0"
 
           const offset=swipe?.id===message.id?swipe.offset:0;
           const actionsOpen=activeMessageId===message.id;
-          return <div className={`message-row ${message.mine?"mine":"theirs"} ${actionsOpen?"actions-open":""}`} key={message.id}>
+          const previous=messages[index-1];const following=messages[index+1];
+          const groupedBefore=!!previous&&previous.type!=="activity"&&previous.mine===message.mine;
+          const groupedAfter=!!following&&following.type!=="activity"&&following.mine===message.mine;
+          return <div className={`message-row ${message.mine?"mine":"theirs"} ${groupedBefore?"grouped-before":""} ${groupedAfter?"grouped-after":""} ${actionsOpen?"actions-open":""}`} key={message.id}>
             <div className="swipe-reply-indicator" style={{opacity:Math.min(1,offset/40),transform:`scale(${.72+Math.min(1,offset/68)*.28})`}}><ReplyArrow/></div>
             <div className="bubble-wrap" style={{transform:`translateX(${offset}px)`}}>
               <div className="bubble-cluster">
@@ -652,7 +667,7 @@ function fmt(value:number){return `${String(Math.floor(value/60)).padStart(2,"0"
                   {message.type==="voice"&&message.audioUrl
                     ? <VoicePlayer src={message.audioUrl} label={message.duration}/>
                     : <span>{message.text}</span>}
-                  <small>{new Date(message.sentAt).toLocaleTimeString([], {hour:"numeric",minute:"2-digit"})}</small>
+                  {!groupedAfter&&<small>{new Date(message.sentAt).toLocaleTimeString([], {hour:"numeric",minute:"2-digit"})}</small>}
                 </div>
 
                 <div className="message-quick-actions">
@@ -718,13 +733,15 @@ function fmt(value:number){return `${String(Math.floor(value/60)).padStart(2,"0"
               <button className="voice-send" type="button" onClick={()=>finishVoice(true)}>Send</button>
             </div>
           : <form className="composer animo-composer-layout" onSubmit={send}>
-              <button type="button" className={`composer-end-button ${endConfirm?"confirming":""}`} onClick={endNow} disabled={ending}>{ending?"Ending...":endConfirm?"Sure?":"End"}</button>
+              <button type="button" className={`composer-skip-button ${skipConfirm?"confirming":""}`} onClick={skipMatch} disabled={ending||connectionState!=="connected"} title={skipConfirm?"Confirm find someone new":"Find someone new"}>{skipConfirm?"Sure?":"Next"}</button>
+              <button type="button" className={`composer-end-button ${endConfirm?"confirming":""}`} onClick={endNow} disabled={ending||connectionState!=="connected"}>{ending?"Ending...":endConfirm?"Sure?":"End"}</button>
 
               <input
                 ref={inputRef}
                 value={input}
                 onChange={event=>{setInput(event.target.value);getSocket().emit("typing",{typing:!!event.target.value})}}
-                placeholder="Say hi!"
+                disabled={connectionState!=="connected"}
+                placeholder={connectionState!=="connected"?"Reconnecting…":"Say hi!"}
               />
 
               {input.trim()&&<button type="submit" className="composer-send-button" aria-label="Send message" title="Send message"><SendIcon/></button>}
