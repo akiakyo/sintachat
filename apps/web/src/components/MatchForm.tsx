@@ -62,7 +62,7 @@ export default function MatchForm(){
    router.push("/finding");
  }
 
- return <form id="match" className="match-form" onSubmit={submit}>
+ return <form id="match" className={`match-form ${preferencesOpen?"preferences-active":""}`} onSubmit={submit}>
    <div className="field-row">
      <label className="form-field"><span>Nickname {admin&&<em>admin mode</em>}</span><input value={nickname} onChange={e=>setNickname(e.target.value)} maxLength={admin?48:24} placeholder="Choose a nickname"/></label>
      <fieldset className="form-field segmented-field"><legend>Match with</legend><div className="segmented">
