@@ -96,7 +96,7 @@ export default function MatchForm(){
       <fieldset><legend>Conversation vibe</legend><div className="chips">{vibes.map(value=><button type="button" key={value} className={vibe===value?"active":""} onClick={()=>setVibe(value)}>{value}</button>)}</div></fieldset>
       <fieldset><legend>Interests <em>optional, up to 3</em></legend><div className="chips">{interestList.map(value=><button type="button" key={value} className={interests.includes(value)?"active":""} onClick={()=>toggleInterest(value)}>{value}</button>)}</div></fieldset>
       {preferencesError&&<p className="form-error" role="alert">{preferencesError}</p>}
-      <button className="match-preferences-submit" type="button" disabled={!vibe} onClick={()=>{if(!vibe)return;const existing=getProfile();if(!existing){setPreferencesError("Please complete your profile first.");return}saveProfile({...existing,nickname:nickname.trim(),campus,preference:pref as MatchPreference,vibe,interests});saveConversationPreferences(vibe,interests);closePreferences();startMatching()}}>Start matching</button>
+      <button className="match-preferences-submit" type="button" disabled={!vibe} onClick={()=>{if(!vibe)return;if(!pref||!campus||(admin?!nickname.trim():nickname.trim().length<3)){setPreferencesError("Please complete your profile first.");return}const existing=getProfile();saveProfile({...existing,nickname:nickname.trim(),campus,preference:pref as MatchPreference,vibe,interests,gender:existing?.gender||"unspecified"});saveConversationPreferences(vibe,interests);closePreferences();startMatching()}}>Start matching</button>
     </section>
   </div>}
  </form>
