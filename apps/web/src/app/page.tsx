@@ -54,12 +54,6 @@ export default function Home(){
        <h2 className="home-anim-in home-anim-delay-3">Find someone who gets your vibe.</h2>
        <p className="home-anim-in home-anim-delay-4">Anonymous conversations, campus stories, and real connection across the Philippines.</p>
 
-       <div className="home-identity-strip home-anim-in home-anim-delay-4" aria-label="SintaChat identity">
-         <article><b>Vibe-first</b><span>Match around how you feel.</span></article>
-         <article><b>Campus-wide</b><span>Meet beyond your school.</span></article>
-         <article><b>18+ anonymous</b><span>Privacy and respect first.</span></article>
-       </div>
-
        <MatchForm/>
 
        <div className="home-shortcuts">

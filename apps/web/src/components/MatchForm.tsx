@@ -32,6 +32,17 @@ export default function MatchForm(){
      const socket=getSocket();
      socket.emit("cancel-search");
    } catch {}
+   setAdmin(isAdminMode());
+   const existing=getProfile();
+   if(existing){
+     setNickname(existing.nickname||"");
+     setCampus(existing.campus||"");
+     if(existing.preference)setPref(existing.preference);
+     if(existing.vibe)setVibe(existing.vibe);
+     if(Array.isArray(existing.interests))setInterests(existing.interests);
+   }
+   const savedPreference=localStorage.getItem("sintachat-match-preference") as MatchPreference|null;
+   if(!existing?.preference&&savedPreference)setPref(savedPreference);
  },[]);
 
  useEffect(()=>{
@@ -75,8 +86,9 @@ export default function MatchForm(){
   <section className="form-stage"><label className="form-field"><span>University / Campus</span><input list="philippine-universities" value={campus} onChange={e=>setCampus(e.target.value)} maxLength={120} placeholder="Search or type your university / campus" autoComplete="off"/><datalist id="philippine-universities">{PHILIPPINE_UNIVERSITY_SUGGESTIONS.map(c=><option key={c} value={c}/>)}</datalist><small className="campus-helper">Other school / Rather not say is pinned first. You may also type any Philippine university or campus not yet shown in suggestions.</small></label></section>
    {error&&<p className="form-error">{error}</p>}
   <button className="find-button" type="submit">Find someone</button>
-  {preferencesOpen&&<div className="match-preferences-backdrop" role="presentation" onMouseDown={closePreferences}>
-    <section className="match-preferences-modal" role="dialog" aria-modal="true" aria-labelledby="match-preferences-title" onMouseDown={event=>event.stopPropagation()}>
+  {preferencesOpen&&<div className="match-preferences-backdrop" role="presentation" onClick={event=>{if(event.target===event.currentTarget)closePreferences()}}>
+    <section className="match-preferences-modal" role="dialog" aria-modal="true" aria-labelledby="match-preferences-title" onClick={event=>event.stopPropagation()}>
+      <button type="button" className="match-preferences-close" aria-label="Close" onClick={closePreferences}>&times;</button>
       <div className="match-preferences-art"><img src="/assets/waiting.png" alt=""/></div>
       <p className="eyebrow">ONE QUICK STEP</p>
       <h2 id="match-preferences-title">Set the tone for your chat</h2>

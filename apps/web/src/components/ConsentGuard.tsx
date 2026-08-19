@@ -26,6 +26,9 @@ export default function ConsentGuard({children}:{children:React.ReactNode}){
    setReady(true)
  },[path,publicRoute,router]);
 
- if(path==="/"&&!ready)return <ConsentScreen onAccepted={()=>{setReady(true);router.replace("/")}}/>;
+ if(path==="/"&&!ready)return <ConsentScreen onAccepted={()=>{
+   // Force a hard reload so the cookie/middleware state and home page are fully fresh.
+   window.location.assign("/");
+ }}/>;
  return ready?<>{children}</>:<div className="route-loader logo-only-loader" aria-label="Loading"><img src="/assets/logo.png" alt="SintaChat"/></div>;
 }
