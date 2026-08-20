@@ -3,45 +3,68 @@
 <p align="left">
 
 <a href="https://sintachat.com">
-<img src="https://img.shields.io/badge/Website-sintachat.com-FF6B9D?style=social&logo=googlechrome"/>
+<img src="https://img.shields.io/badge/Website-sintachat.com-FF6B9D?style=plastic&logo=googlechrome&logoColor=white"/>
+</a>
+
+<a href="https://github.com/akiakyo/sintachat">
+<img src="https://img.shields.io/badge/GitHub-Repository-181717?style=plastic&logo=github&logoColor=white"/>
 </a>
 
 </p>
 
-SintaChat is a real-time anonymous chat and matching platform built for student communities. It allows users to connect with strangers, start conversations, exchange messages, react in chat, send voice notes, and safely move on after every match.
+SintaChat is a real-time anonymous chat and matching platform built for student communities across the Philippines.
+
+The platform allows users to connect with people who share similar interests, start anonymous conversations, exchange messages, send voice notes, react in chat, participate in community activities, and safely end conversations.
+
+SintaChat focuses on privacy, safety, and meaningful digital connections.
 
 ---
 
-## About the Product
+# Features
 
-SintaChat is designed to feel lightweight, anonymous, and social. The platform focuses on quick, respectful interactions without requiring users to create a heavy profile.
+<p align="left">
+
+<img src="https://img.shields.io/badge/Anonymous_Matching-FF6B9D?style=plastic"/>
+<img src="https://img.shields.io/badge/Realtime_Chat-5865F2?style=plastic"/>
+<img src="https://img.shields.io/badge/Voice_Notes-00C853?style=plastic"/>
+<img src="https://img.shields.io/badge/Freedom_Wall-FF9800?style=plastic"/>
+
+</p>
 
 Features include:
 
 - Anonymous match-based conversations
-- Real-time text chat with reactions and emojis
+- Real-time messaging with reactions and emojis
 - Voice message recording and playback
-- In-chat activities and games
-- Public Freedom Wall
-- Admin moderation tools for safety
-
-The product is optimized for a privacy-first experience with clear consent flows and a clean mobile-friendly interface.
+- Interactive chat activities
+- Public Freedom Wall community
+- Admin moderation tools
+- Consent and privacy management
+- Mobile-friendly interface
 
 ---
 
-## Project Structure
+# Project Structure
 
-This repository is organized as a monorepo:
+SintaChat uses a monorepo architecture.
 
 ```text
-apps/web       → Next.js frontend
-apps/server    → Express + Socket.IO realtime backend
-legacy-v3      → Archived older version kept for reference
+sintachat
+
+apps/
+├── web
+│   └── Next.js frontend application
+│
+└── server
+    └── Express + Socket.IO backend
+
+legacy-v3
+└── Archived previous version
 ```
 
 ---
 
-## Tech Stack
+# Tech Stack
 
 <p align="left">
 
@@ -51,12 +74,13 @@ legacy-v3      → Archived older version kept for reference
 
 <br>
 
-<img src="https://img.shields.io/badge/Socket.IO-010101?style=plastic&logo=socketdotio&logoColor=white"/>
+<img src="https://img.shields.io/badge/Node.js-339933?style=plastic&logo=nodedotjs&logoColor=white"/>
 <img src="https://img.shields.io/badge/Express.js-000000?style=plastic&logo=express&logoColor=white"/>
-<img src="https://img.shields.io/badge/Prisma-2D3748?style=plastic&logo=prisma&logoColor=white"/>
+<img src="https://img.shields.io/badge/Socket.IO-010101?style=plastic&logo=socketdotio&logoColor=white"/>
 
 <br>
 
+<img src="https://img.shields.io/badge/Prisma-2D3748?style=plastic&logo=prisma&logoColor=white"/>
 <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=plastic&logo=postgresql&logoColor=white"/>
 <img src="https://img.shields.io/badge/Neon-00E599?style=plastic&logo=postgresql&logoColor=white"/>
 
@@ -64,54 +88,80 @@ legacy-v3      → Archived older version kept for reference
 
 <img src="https://img.shields.io/badge/Vercel-000000?style=plastic&logo=vercel&logoColor=white"/>
 <img src="https://img.shields.io/badge/Railway-0B0D0E?style=plastic&logo=railway&logoColor=white"/>
-<img src="https://img.shields.io/badge/bcrypt-338?style=plastic&logo=security&logoColor=white"/>
 
 </p>
 
 ---
 
-## Product Pages
+# Getting Started
 
-<p align="left">
+## Clone Repository
 
-<img src="https://img.shields.io/badge/Home-Matching-FF6B9D?style=plastic"/>
-<img src="https://img.shields.io/badge/Chat-Realtime-5865F2?style=plastic"/>
-<img src="https://img.shields.io/badge/Freedom_Wall-Social-00C853?style=plastic"/>
-<img src="https://img.shields.io/badge/Admin-Moderation-FF9800?style=plastic"/>
+Clone the project locally:
 
-</p>
+```bash
+git clone https://github.com/akiakyo/sintachat.git
 
-Included pages:
-
-- Home / Matching
-- Consent
-- Privacy Policy
-- Terms
-- Safety
-- FAQ
-- About
-- Conversation Room
-- Freedom Wall
-- Admin Dashboard
+cd sintachat
+```
 
 ---
 
-## Local Development
+# Installation
 
-From the project root:
+Install dependencies:
 
 ```bash
 npm install
+```
+
+For individual applications:
+
+Frontend:
+
+```bash
+cd apps/web
+npm install
+```
+
+Backend:
+
+```bash
+cd apps/server
+npm install
+```
+
+---
+
+# Running Locally
+
+## Frontend
+
+```bash
+cd apps/web
+
 npm run dev
 ```
 
-Frontend:
+Available at:
 
 ```text
 http://localhost:3000
 ```
 
-Backend:
+---
+
+## Backend
+
+Open another terminal:
+
+```bash
+cd apps/server
+
+npm run dev
+```
+
+Available at:
 
 ```text
 http://localhost:3001
@@ -119,90 +169,212 @@ http://localhost:3001
 
 ---
 
-## Production Deployment
+# Git Workflow
+
+## Create a New Branch
+
+Always create a branch before making changes.
+
+```bash
+git checkout -b feature/feature-name
+```
+
+Example:
+
+```bash
+git checkout -b feature/chat-reactions
+```
+
+---
+
+## Commit Changes
+
+Check modified files:
+
+```bash
+git status
+```
+
+Add changes:
+
+```bash
+git add .
+```
+
+Commit:
+
+```bash
+git commit -m "Add chat reaction feature"
+```
+
+---
+
+## Push Changes
+
+Push your branch:
+
+```bash
+git push origin feature/chat-reactions
+```
+
+Create a Pull Request on GitHub after pushing.
+
+---
+
+# Updating Local Repository
+
+Before starting new work:
+
+```bash
+git checkout main
+
+git pull origin main
+```
+
+---
+
+# Environment Variables
+
+Create the required environment files:
+
+Frontend:
+
+```text
+apps/web/.env.local
+```
+
+Backend:
+
+```text
+apps/server/.env
+```
+
+Required variables include:
+
+- Database connection settings
+- Prisma configuration
+- Socket.IO URL
+- Authentication secrets
+- Admin credentials
+- Consent configuration
+
+Never commit environment files or production secrets.
+
+---
+
+# Production Deployment
 
 <p align="left">
 
-<img src="https://img.shields.io/badge/Production-sintachat.com-FF6B9D?style=plastic&logo=googlechrome"/>
-<img src="https://img.shields.io/badge/Frontend-Vercel-000000?style=plastic&logo=vercel"/>
-<img src="https://img.shields.io/badge/Backend-Railway-0B0D0E?style=plastic&logo=railway"/>
+<img src="https://img.shields.io/badge/Frontend-Vercel-000000?style=plastic&logo=vercel&logoColor=white"/>
+<img src="https://img.shields.io/badge/Backend-Railway-0B0D0E?style=plastic&logo=railway&logoColor=white"/>
+<img src="https://img.shields.io/badge/Database-Neon-00E599?style=plastic"/>
 
 </p>
 
-Live production site:
+Production Website:
+
+<a href="https://sintachat.com">
+<img src="https://img.shields.io/badge/Open-sintachat.com-FF6B9D?style=plastic&logo=googlechrome&logoColor=white"/>
+</a>
+
+Architecture:
 
 ```text
-https://sintachat.com
+User
+ |
+ v
+Vercel
+ |
+ v
+Next.js Application
+ |
+ v
+Socket.IO Connection
+ |
+ v
+Railway Backend
+ |
+ v
+Neon PostgreSQL
 ```
 
-The realtime backend is hosted separately on Railway and connects to the frontend through the Socket.IO URL.
-
-Important deployment rules:
-
-- Only the main Vercel project named `sintachat` should be used for production.
-- Do not keep duplicate production projects such as `sintachatv2` active.
-- Duplicate deployments may cause routing conflicts and unexpected 404 errors.
-
 ---
 
-## Environment Variables
-
-The application uses environment variables for:
-
-- Prisma / Neon database connection
-- Consent policy version
-- Frontend Socket.IO URL
-- Admin password hash
-- Authentication token secret
-
-Never commit real secrets to GitHub.
-
----
-
-## Admin Access
+# Application Pages
 
 <p align="left">
 
-<img src="https://img.shields.io/badge/Admin_Dashboard-Available-FF9800?style=plastic&logo=security"/>
+<img src="https://img.shields.io/badge/Home-Matching-FF6B9D?style=plastic"/>
+<img src="https://img.shields.io/badge/Chat-Realtime-5865F2?style=plastic"/>
+<img src="https://img.shields.io/badge/Freedom_Wall-Community-00C853?style=plastic"/>
+<img src="https://img.shields.io/badge/Admin-Moderation-FF9800?style=plastic"/>
 
 </p>
 
-Admin dashboard:
+Available routes:
 
-```text
-https://sintachat.com/admin
-```
-
-Admin credentials are stored securely in backend environment variables and hashed before comparison.
+- Home / Matching
+- Consent
+- Conversation Room
+- Freedom Wall
+- FAQ
+- Safety
+- Privacy Policy
+- Terms and Conditions
+- Admin Dashboard
 
 ---
 
-## Safety and Moderation
+# Safety and Moderation
 
-SintaChat includes moderation and safety features to maintain respectful conversations.
+SintaChat includes moderation features designed to maintain respectful interactions.
 
-Admin tools include:
+Moderation tools include:
 
-- User bans
-- User unbans
-- Account suspension
+- User banning
+- User suspension
 - Conversation termination
-- Active session review
+- Session monitoring
+- Administrative review
 
 ---
 
-## Social
+# Contributing
+
+Contributions are welcome.
+
+Steps:
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Commit your changes
+5. Push your branch
+6. Submit a Pull Request
+
+---
+
+# Social
 
 <p align="left">
 
 <a href="https://sintachat.com">
-<img src="https://img.shields.io/badge/SintaChat-sintachat.com-FF6B9D?style=social&logo=googlechrome"/>
+<img src="https://img.shields.io/badge/Website-sintachat.com-FF6B9D?style=social&logo=googlechrome"/>
+</a>
+
+<a href="https://github.com/akiakyo/sintachat">
+<img src="https://img.shields.io/badge/GitHub-akiakyo-181717?style=social&logo=github"/>
 </a>
 
 </p>
 
 ---
 
-## Notes
+# License
 
-SintaChat is built as a focused, production-ready anonymous chat experience with a clean architecture, real-time communication system, and privacy-focused moderation workflow.
+This project is currently maintained by the Computer Engineering students @ Polytechnic University of the Philippines.
+
+---
+
+SintaChat is built as a production-ready anonymous communication platform focused on real-time interaction, student communities, privacy, and safe online conversations.
